@@ -2,7 +2,7 @@
 <html lang="gu">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#1d4ed8">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" href="favicon.png">
@@ -309,6 +309,21 @@ html,body{overflow-x:hidden}
 .upd-banner{position:fixed;left:50%;transform:translateX(-50%);top:12px;z-index:250;background:linear-gradient(135deg,#059669,#22c55e);color:#fff;
   border-radius:14px;padding:10px 12px 10px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 10px 30px rgba(0,0,0,.25);font-weight:600;font-size:14px;max-width:94vw}
 .upd-banner button{background:#fff;color:#047857;border:none;border-radius:10px;padding:8px 12px;font-weight:800;cursor:pointer;flex:none}
+
+/* ---------- header: logo + coloured user name ---------- */
+.head-in .ttl{display:flex;align-items:center;gap:10px;min-width:0}
+.h-logo{width:52px;height:52px;border-radius:14px;flex:none;object-fit:cover;box-shadow:0 0 0 2px rgba(255,255,255,.35),0 4px 12px rgba(0,0,0,.3)}
+.h-info{min-width:0;display:flex;flex-direction:column;gap:5px}
+.h-user{display:flex;align-items:center;gap:7px;min-width:0}
+.h-av{width:30px;height:30px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#fff;
+  background:linear-gradient(135deg,#f59e0b,#ef4444);box-shadow:0 0 0 2px rgba(255,255,255,.7)}
+.h-name{font-size:22px;font-weight:800;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;
+  color:#fde68a;text-shadow:0 1px 2px rgba(0,0,0,.35)}
+.h-role{flex:none;font-size:8.5px;font-weight:700;line-height:1.5;padding:0 6px;border-radius:20px;color:#422006;background:linear-gradient(135deg,#fde047,#f59e0b)}
+.h-sub{opacity:.95;font-size:12px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+@media(max-width:400px){.h-logo{width:46px;height:46px}.h-name{font-size:20px}}
+.h-sub .net{font-size:8.5px;line-height:1.5;padding:0 6px;gap:4px}.h-sub .net i{width:6px;height:6px}
+.h-sub{gap:4px}
 </style>
 </head>
 <body>
@@ -419,8 +434,11 @@ html,body{overflow-x:hidden}
   <header>
     <div class="head-in">
       <div class="ttl">
-        <h2 class="brand-h"><img src="logo.png" alt="" onerror="this.remove()"><span class="bt">Tanak Toli</span></h2>
-        <small><span id="whoami"></span><span class="net" id="net"><i></i><span>ઓનલાઇન</span></span><span class="net loc-off hidden" id="locPill"><i></i><span>📍 લોકેશન...</span></span></small>
+        <img class="h-logo" src="logo.png" alt="Tanak Toli" onerror="this.remove()">
+        <div class="h-info">
+          <div class="h-user"><span class="h-name" id="whoName"></span></div>
+          <small class="h-sub"><span class="h-role hidden" id="whoRole">⭐ એડમિન</span><span id="whoami" class="hidden"></span><span class="net" id="net"><i></i><span>ઓનલાઇન</span></span><span class="net loc-off hidden" id="locPill"><i></i><span>📍 લોકેશન...</span></span></small>
+        </div>
       </div>
       <button class="icon-btn admin-only" id="mapBtn" title="ટીમ લોકેશન">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
@@ -972,6 +990,8 @@ $('logoutBtn').onclick=()=>{if(confirm('લોગઆઉટ કરવું છ�
 /* ================= APP ================= */
 function paintMe(){
   $('whoami').textContent='👤 '+(me.name||me.email)+(isAdmin()?' · એડમિન':'');
+  $('whoName').textContent=me.name||me.email;
+  $('whoRole').classList.toggle('hidden',!isAdmin());
   document.querySelectorAll('.admin-only').forEach(el=>el.classList.toggle('hidden',!isAdmin()));
   const old=lsGet(K_OLD,[]);
   $('oldImpBtn').classList.toggle('hidden',!(isAdmin()&&Array.isArray(old)&&old.length&&!lsGet(K_OLD_DONE,false)));
@@ -1538,7 +1558,7 @@ const mapOpen=()=>!$('mapScreen').classList.contains('hidden');
 const locColor=u=>{const m=(Date.now()-ms(u.loc&&u.loc.at))/60000;return m<7?'#16a34a':m<30?'#f59e0b':'#94a3b8'};
 $('mapBtn').onclick=async()=>{
   if(!isAdmin())return;
-  openFull('mapScreen');mapFitted=false;
+  openFull('mapScreen');mapFitted=false;applyZoom();
   try{await loadLeaflet()}catch(e){$('mapSub').textContent='નકશો લોડ ન થયો. ઇન્ટરનેટ ચેક કરો';renderLocList();return}
   if(!mapObj){
     mapObj=L.map('map',{zoomControl:true}).setView([22.3039,70.8022],11);
@@ -1588,9 +1608,11 @@ window.addEventListener('popstate',()=>{
 });
 
 /* ================= VERSION ================= */
-const APP_VERSION='1.0.0';
+const APP_VERSION='1.0.3';
 const APP_DATE='26/09/2026';
 const APP_NEWS=[
+  '🔍 બે આંગળીથી ઝૂમ — અક્ષર મોટા થાય, બાજુમાં ખસવું ન પડે',
+  '👤 હેડરમાં લોગો પૂરો અને નામ મોટું-રંગીન',
   '🏢 પોલીસ સ્ટેશન પ્રમાણે ગ્રુપ — સ્ટેશન દબાવો એટલે નામ, નામ દબાવો એટલે વિગત',
   '✔ ટીક માર્ક, ✏ સુધારો, 🗑 ડિલીટ, 📍 Google Maps, 📱 WhatsApp',
   '👥 લોગિન, નવું એકાઉન્ટ અને એડમિન મંજૂરી',
@@ -1658,8 +1680,34 @@ $('themeGrid').addEventListener('click',e=>{const b=e.target.closest('[data-th]'
 applyTheme(lsGet('pea_theme','blue'));
 
 /* ================= ZOOM =================
-   Pinch (two-finger) zoom is handled by the phone itself. Old saved zoom is cleared. */
-function applyZoom(){document.documentElement.style.zoom=''}
+   Two-finger pinch makes text & buttons bigger/smaller, but everything
+   re-arranges to fit the phone width (no side scrolling). Saved per phone. */
+const K_ZOOM='pea_zoom2',Z_MIN=70,Z_MAX=170;
+let zoom=lsGet(K_ZOOM,100);
+function applyZoom(){
+  zoom=Math.max(Z_MIN,Math.min(Z_MAX,Math.round(zoom)));
+  document.documentElement.style.zoom=(mapOpen&&mapOpen())?'':(zoom/100);
+}
+(function(){
+  let startD=0,startZ=100,raf=0,pinching=false;
+  const dist=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);
+  const skip=()=>typeof mapOpen==='function'&&mapOpen();
+  document.addEventListener('touchstart',e=>{
+    if(e.touches.length===2&&!skip()){pinching=true;startD=dist(e.touches);startZ=zoom}
+  },{passive:true});
+  document.addEventListener('touchmove',e=>{
+    if(!pinching||e.touches.length!==2)return;
+    e.preventDefault();
+    const nz=startZ*dist(e.touches)/startD;
+    if(Math.abs(nz-zoom)<1)return;
+    zoom=nz;cancelAnimationFrame(raf);raf=requestAnimationFrame(()=>{applyZoom();toast('🔍 '+Math.round(zoom/5)*5+'%')});
+  },{passive:false});
+  document.addEventListener('touchend',e=>{
+    if(pinching&&e.touches.length<2){pinching=false;zoom=Math.round(zoom/5)*5;applyZoom();lsSet(K_ZOOM,zoom)}
+  },{passive:true});
+  // iPhone Safari: block its own page zoom so ours is used
+  ['gesturestart','gesturechange'].forEach(ev=>document.addEventListener(ev,e=>e.preventDefault(),{passive:false}));
+})();
 lsDel('pea_zoom');applyZoom();
 
 /* ================= INSTALL (PWA) ================= */
