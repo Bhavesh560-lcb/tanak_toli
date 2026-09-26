@@ -401,6 +401,17 @@ html[data-theme="dark"] .tk3{color:#53bdeb}
 .me-lbl::before{border-top-color:#2563eb!important}
 .em-dist{font-weight:700;color:#2563eb}
 .em-btns a,.em-btns button{white-space:nowrap}
+
+.em-layers{position:absolute;top:10px;right:10px;z-index:500;display:flex;background:rgba(255,255,255,.95);border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.25);overflow:hidden}
+.em-layers button{border:none;background:none;padding:8px 10px;font-size:12.5px;font-weight:700;color:#334155;cursor:pointer;white-space:nowrap}
+.em-layers button+button{border-left:1px solid #e2e8f0}
+.em-layers button.on{background:var(--pri);color:#fff}
+.em-dark .leaflet-tooltip{font-weight:700}
+
+.fab-map{position:fixed;right:26px;bottom:94px;width:48px;height:48px;border-radius:50%;border:none;cursor:pointer;z-index:15;color:#fff;
+  display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0891b2,#0e7490);box-shadow:0 8px 22px rgba(8,145,178,.45)}
+.fab-map:active{transform:scale(.94)}
+.full-open .fab-map{display:none}
 </style>
 </head>
 <body>
@@ -517,9 +528,6 @@ html[data-theme="dark"] .tk3{color:#53bdeb}
           <small class="h-sub"><span class="h-role hidden" id="whoRole">⭐ એડમિન</span><span id="whoami" class="hidden"></span><span class="net" id="net"><i></i><span>ઓનલાઇન</span></span></small>
         </div>
       </div>
-      <button class="icon-btn" id="emapBtn" title="એન્ટ્રીનો નકશો">
-        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg>
-      </button>
       <button class="icon-btn" id="setBtn" title="સેટિંગ્સ">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg>
       </button>
@@ -555,6 +563,9 @@ html[data-theme="dark"] .tk3{color:#53bdeb}
   <button class="fab-chat" id="chatBtn" title="ચેટ">
     <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
     <span class="fc-l">ચેટ</span>
+  </button>
+  <button class="fab-map" id="emapBtn" title="એન્ટ્રીનો નકશો">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg>
   </button>
   <button class="fab" id="addBtn" title="નવી એન્ટ્રી">
     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
@@ -776,7 +787,8 @@ html[data-theme="dark"] .tk3{color:#53bdeb}
     <button class="back" id="emapFit" title="બધા બતાવો">⤢</button>
   </div>
   <div class="em-chips" id="emChips"></div>
-  <div class="em-wrap"><div id="emap"></div><button class="em-me" id="emMe" title="હું ક્યાં છું">📍 હું અહીં છું</button></div>
+  <div class="em-wrap"><div id="emap"></div>
+    <div class="em-layers" id="emLayers"><button data-ml="map">🗺 નકશો</button><button data-ml="sat">🛰 સેટેલાઇટ</button><button data-ml="hyb">🏙 નામ સાથે</button></div><button class="em-me" id="emMe" title="હું ક્યાં છું">📍 હું અહીં છું</button></div>
   <div class="em-info" id="emInfo"></div>
 </div>
 
@@ -1911,13 +1923,35 @@ $('emapBtn').onclick=async()=>{
   try{await loadMapLib()}catch(e){$('emapSub').textContent='નકશો લોડ ન થયો. ઇન્ટરનેટ ચેક કરો';return}
   if(!emap){
     emap=L.map('emap',{zoomControl:true}).setView([22.3039,70.8022],10);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(emap);
+    setMapLayer(lsGet('pea_maplayer','map'));
   }
   setTimeout(()=>{emap.invalidateSize();renderEmap();geocodeMissing()},120);
   startMyLoc();paintMe2();
 };
 $('emapBack').onclick=()=>history.back();
 $('emapFit').onclick=()=>{emFitted=false;renderEmap()};
+
+/* ---------- map type: normal / satellite / satellite + names ---------- */
+let baseLayers=null,curLayer=[];
+function setMapLayer(k){
+  if(!emap||!window.L)return;
+  if(!baseLayers){
+    const E='https://server.arcgisonline.com/ArcGIS/rest/services/',EA='Tiles © Esri — Esri, Maxar, Earthstar Geographics';
+    const osm=()=>L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'});
+    const sat=()=>L.tileLayer(E+'World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,maxNativeZoom:18,attribution:EA});
+    const lbl=()=>L.tileLayer(E+'Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,maxNativeZoom:18,pane:'overlayPane'});
+    const rds=()=>L.tileLayer(E+'Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,maxNativeZoom:18,pane:'overlayPane',opacity:.8});
+    baseLayers={map:[osm()],sat:[sat()],hyb:[sat(),rds(),lbl()]};
+  }
+  if(!baseLayers[k])k='map';
+  curLayer.forEach(l=>emap.removeLayer(l));
+  curLayer=baseLayers[k];curLayer.forEach(l=>l.addTo(emap));
+  document.querySelectorAll('#emLayers [data-ml]').forEach(b=>b.classList.toggle('on',b.dataset.ml===k));
+  $('emapScreen').classList.toggle('em-dark',k!=='map');
+  lsSet('pea_maplayer',k);
+}
+$('emLayers').addEventListener('click',e=>{const b=e.target.closest('[data-ml]');if(!b)return;setMapLayer(b.dataset.ml)});
+
 function emEntries(){return emFilter==='__all'?entries:entries.filter(x=>stKey(x)===emFilter)}
 function renderEmChips(){
   const g={};entries.forEach(x=>{const k=stKey(x);g[k]=(g[k]||0)+1});
@@ -1991,9 +2025,11 @@ window.addEventListener('popstate',()=>{
 });
 
 /* ================= VERSION ================= */
-const APP_VERSION='1.3.2';
+const APP_VERSION='1.3.4';
 const APP_DATE='26/09/2026';
 const APP_NEWS=[
+  '🗺 નકશાનું ગોળ બટન હવે નીચે ＋ ની ઉપર',
+  '🛰 નકશામાં સેટેલાઇટ વ્યૂ — નકશો / સેટેલાઇટ / નામ સાથે',
   '🔤 એન્ટ્રીઓ અને પોલીસ સ્ટેશનનાં નામ ABC / કક્કા પ્રમાણે ક્રમમાં',
   '🗺 એન્ટ્રીનો નકશો — બધા અથવા પોલીસ સ્ટેશન પ્રમાણે, બધા યુઝર જોઈ શકે',
   '📍 નકશા પર "હું અહીં છું", દરેક એન્ટ્રીનું અંતર અને 🧭 રસ્તો',
