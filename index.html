@@ -48,7 +48,6 @@ html[data-theme="dark"] .req-row{background:#2a2010;border-color:#5c4513}
 html[data-theme="dark"] .req-banner{background:#2a2010;color:#fcd34d}
 html[data-theme="dark"] .btn-danger,html[data-theme="dark"] .act-btn.del{background:#3a1717}
 html[data-theme="dark"] .wa-yes{background:#0f2e1f;color:#4ade80}
-html[data-theme="dark"] .leaflet-container{filter:brightness(.8)}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Noto Sans Gujarati',system-ui,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;font-size:15px}
 button,input,select,textarea{font-family:inherit;font-size:15px}
@@ -216,7 +215,7 @@ html,body{overflow-x:hidden}
 .brand-logo{display:block;width:150px;height:150px;margin:0 auto 12px;border-radius:30px;box-shadow:0 10px 26px rgba(6,10,22,.35)}
 .brand-h{display:flex;align-items:center;gap:8px}
 .brand-h img{width:38px;height:38px;border-radius:10px;flex:none;margin:-6px 0;box-shadow:0 0 0 1.5px rgba(255,255,255,.25)}
-/* ---------- chat & map (full screens) ---------- */
+/* ---------- chat (full screen) ---------- */
 .full{position:fixed;inset:0;z-index:60;background:var(--bg);display:flex;flex-direction:column}
 .full-head{background:linear-gradient(135deg,var(--h1),var(--h2));color:#fff;display:flex;align-items:center;gap:10px;padding:10px 12px;flex:none}
 .full-head .back{background:rgba(255,255,255,.15);border:none;color:#fff;width:40px;height:40px;border-radius:11px;font-size:20px;cursor:pointer;flex:none}
@@ -245,14 +244,6 @@ html,body{overflow-x:hidden}
 .composer textarea:focus{border-color:var(--pri)}
 .composer button{width:44px;height:44px;border-radius:50%;border:none;cursor:pointer;flex:none;font-size:18px}
 #sendBtn{background:var(--pri);color:#fff}#sendLoc{background:var(--soft)}
-#map{height:52%;min-height:240px;flex:none;background:#dfe6f0}
-.loc-list{flex:1;overflow:auto;background:var(--card)}
-.l-row{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line2)}
-.l-dot{width:12px;height:12px;border-radius:50%;flex:none}
-.l-mid{flex:1;min-width:0}.l-mid b{display:block;font-size:14.5px}.l-mid small{color:var(--muted);font-size:12px}
-.l-btns{display:flex;gap:6px;flex:none}.l-btns .btn{padding:6px 9px;font-size:12px;border-radius:8px}
-.map-lbl{background:var(--card);border:none;box-shadow:0 1px 4px rgba(0,0,0,.3);font-weight:700;font-size:12px;padding:2px 6px;border-radius:6px}
-.net.loc-off i{background:#fbbf24}.net{cursor:pointer}
 @media(max-width:430px){.brand-h .bt{display:none}.icon-btn{width:38px;height:38px}.head-in{gap:7px}}
 .inst-banner{display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,var(--tint),var(--tint2));border:1.5px solid var(--tint3);border-radius:14px;padding:10px 12px;margin-bottom:12px;text-align:left}
 .inst-banner img{width:40px;height:40px;border-radius:10px;flex:none}
@@ -437,12 +428,9 @@ html,body{overflow-x:hidden}
         <img class="h-logo" src="logo.png" alt="Tanak Toli" onerror="this.remove()">
         <div class="h-info">
           <div class="h-user"><span class="h-name" id="whoName"></span></div>
-          <small class="h-sub"><span class="h-role hidden" id="whoRole">⭐ એડમિન</span><span id="whoami" class="hidden"></span><span class="net" id="net"><i></i><span>ઓનલાઇન</span></span><span class="net loc-off hidden" id="locPill"><i></i><span>📍 લોકેશન...</span></span></small>
+          <small class="h-sub"><span class="h-role hidden" id="whoRole">⭐ એડમિન</span><span id="whoami" class="hidden"></span><span class="net" id="net"><i></i><span>ઓનલાઇન</span></span></small>
         </div>
       </div>
-      <button class="icon-btn admin-only" id="mapBtn" title="ટીમ લોકેશન">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-      </button>
       <button class="icon-btn" id="setBtn" title="સેટિંગ્સ">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg>
       </button>
@@ -569,11 +557,6 @@ html,body{overflow-x:hidden}
     </div>
 
     <div class="set-sec">
-      <h4>📍 લોકેશન</h4>
-      <div class="hint" style="margin-top:0">એપ ખુલ્લી હોય ત્યારે દર 5 મિનિટે તમારું લોકેશન એડમિનને જાય છે.</div>
-    </div>
-
-    <div class="set-sec">
       <h4>👤 મારું એકાઉન્ટ</h4>
       <div class="field"><label>મારું નામ</label>
         <div class="loc-wrap"><input id="myName"><button class="btn btn-light" id="myNameBtn">સેવ</button></div></div>
@@ -660,17 +643,6 @@ html,body{overflow-x:hidden}
       <button id="sendBtn" title="મોકલો">➤</button>
     </div>
   </div>
-</div>
-
-<!-- Team map (admin) -->
-<div class="full hidden" id="mapScreen">
-  <div class="full-head">
-    <button class="back" id="mapBack">←</button>
-    <div class="fh-t"><b>🗺 ટીમ લોકેશન</b><small id="mapSub"></small></div>
-    <button class="back" id="mapFit" title="બધા બતાવો">⤢</button>
-  </div>
-  <div id="map"></div>
-  <div class="loc-list" id="locList"></div>
 </div>
 
 <div id="iosHelp" class="hidden">
@@ -1210,7 +1182,8 @@ function listenUsers(){
   if(unsubUsers)return;
   unsubUsers=db.collection('users').onSnapshot(s=>{
     users=s.docs.map(d=>({uid:d.id,...d.data({serverTimestamps:'estimate'})})).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
-    renderUsers();renderMap();
+    users.filter(u=>u.loc).forEach(u=>db.collection('users').doc(u.uid).update({loc:firebase.firestore.FieldValue.delete()}).catch(()=>{}));
+    renderUsers();
   },()=>{});
 }
 let lastReqCount=-1;
@@ -1369,8 +1342,7 @@ $('resetCfgBtn').onclick=()=>{
 
 /* ================= CHAT + LOCATION ================= */
 let members=[],chats={},prevLast={},socialReady=false,curChat=null;
-let unsubMembers=null,unsubChats=null,unsubGroup=null,unsubMsgs=null,geoWatch=null,presenceTimer=null;
-let lastLocWrite=0,lastLoc=null,locState='off',mapObj=null,mapLayer=null,mapFitted=false;
+let unsubMembers=null,unsubChats=null,unsubGroup=null,unsubMsgs=null,presenceTimer=null;
 const K_LR=()=>'pea_lr_'+(me?me.uid:'');
 const initials=n=>(n||'?').trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
 function ago(v){const t=ms(v);if(!t)return '';const m=Math.floor((Date.now()-t)/60000);
@@ -1404,58 +1376,28 @@ function startSocial(){
   unsubGroup=db.collection('chats').doc('group').onSnapshot(d=>{
     if(d.exists)onChat(d);else prevLast.group=0;renderChatList();paintUnread();
   },()=>{});
-  startGeo();
+  clearOldLocation();
 }
 function stopSocial(){
   [unsubMembers,unsubChats,unsubGroup,unsubMsgs].forEach(f=>f&&f());
   unsubMembers=unsubChats=unsubGroup=unsubMsgs=null;
-  if(geoWatch!==null&&navigator.geolocation)navigator.geolocation.clearWatch(geoWatch);geoWatch=null;
-  clearInterval(presenceTimer);presenceTimer=null;clearInterval(locTimer);locTimer=null;
-  socialReady=false;members=[];chats={};curChat=null;lastLoc=null;lastLocWrite=0;
-  $('chatScreen').classList.add('hidden');$('mapScreen').classList.add('hidden');document.body.classList.remove('full-open');
+  clearInterval(presenceTimer);presenceTimer=null;
+  socialReady=false;members=[];chats={};curChat=null;
+  $('chatScreen').classList.add('hidden');document.body.classList.remove('full-open');
   const dot=$('chatBtn').querySelector('.dot-badge');if(dot)dot.remove();
 }
 function pingPresence(){
   if(!me)return;
   db.collection('members').doc(me.uid).set({name:me.name||me.email,role:me.role||'staff',mobile:me.mobile||'',active:true,lastSeen:ts()},{merge:true}).catch(()=>{});
 }
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&socialReady){pingPresence();pushLocNow()}});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&socialReady)pingPresence()});
 
 
-/* ---------- my live location (shared with admin) ---------- */
-function setLoc(st){
-  locState=st;const el=$('locPill');
-  el.classList.toggle('loc-off',st!=='on');el.classList.toggle('hidden',st==='on');
-  el.lastElementChild.textContent=st==='denied'?'📍 લોકેશન બંધ છે — ચાલુ કરો':'📍 લોકેશન મળતું નથી — GPS ચાલુ કરો';
+/* Location tracking was removed: delete any location saved by older versions */
+function clearOldLocation(){
+  const del=firebase.firestore.FieldValue.delete();
+  if(me&&me.loc)db.collection('users').doc(me.uid).update({loc:del}).catch(()=>{});
 }
-const LOC_EVERY=5*60*1000; // every 5 minutes
-let locTimer=null;
-function pushLocNow(){
-  if(!me||!navigator.geolocation)return;
-  navigator.geolocation.getCurrentPosition(p=>{
-    setLoc('on');const c={lat:+p.coords.latitude.toFixed(6),lng:+p.coords.longitude.toFixed(6),acc:Math.round(p.coords.accuracy||0)};
-    lastLocWrite=Date.now();lastLoc=c;
-    db.collection('users').doc(me.uid).update({loc:{...c,at:ts()}}).catch(()=>{});
-  },err=>setLoc(err.code===1?'denied':'err'),{enableHighAccuracy:true,maximumAge:60000,timeout:30000});
-}
-function startGeo(){
-  if(!navigator.geolocation){setLoc('na');return}
-  clearInterval(locTimer);locTimer=setInterval(pushLocNow,LOC_EVERY);
-  geoWatch=navigator.geolocation.watchPosition(p=>{
-    setLoc('on');
-    const c={lat:+p.coords.latitude.toFixed(6),lng:+p.coords.longitude.toFixed(6),acc:Math.round(p.coords.accuracy||0)};
-    const now=Date.now();
-    if(now-lastLocWrite>=LOC_EVERY||!lastLoc||distM(lastLoc,c)>200){
-      lastLocWrite=now;lastLoc=c;
-      db.collection('users').doc(me.uid).update({loc:{...c,at:ts()}}).catch(()=>{});
-    }
-  },err=>setLoc(err.code===1?'denied':'err'),{enableHighAccuracy:true,maximumAge:30000,timeout:30000});
-}
-$('locPill').onclick=()=>{
-  if(locState==='on')return toast('📍 એપ ખુલ્લી હોય ત્યારે દર 5 મિનિટે તમારું લોકેશન એડમિનને જાય છે');
-  alert('લોકેશન ચાલુ કરવા:\n\n1. ફોનમાં GPS / Location ચાલુ કરો\n2. Chrome માં એડ્રેસ બાર પાસે 🔒 દબાવો → Permissions → Location → Allow\n   (ઇન્સ્ટોલ કરેલી એપ હોય તો: ફોનના Settings → Apps → Tanak Toli / Chrome → Permissions → Location → Allow)\n3. એપ ફરી ખોલો');
-};
-
 /* ---------- chat ---------- */
 function paintUnread(){
   const lr=lastRead();let n=0;
@@ -1546,78 +1488,23 @@ $('sendLoc').onclick=()=>{
   },()=>toast('લોકેશન મળ્યું નહીં. પરમિશન ચેક કરો'),{enableHighAccuracy:true,timeout:15000});
 };
 
-/* ---------- team map (admin) ---------- */
-function loadLeaflet(){
-  if(window.L)return Promise.resolve();
-  return new Promise((res,rej)=>{
-    const l=document.createElement('link');l.rel='stylesheet';l.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';document.head.appendChild(l);
-    const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);
-  });
-}
-const mapOpen=()=>!$('mapScreen').classList.contains('hidden');
-const locColor=u=>{const m=(Date.now()-ms(u.loc&&u.loc.at))/60000;return m<7?'#16a34a':m<30?'#f59e0b':'#94a3b8'};
-$('mapBtn').onclick=async()=>{
-  if(!isAdmin())return;
-  openFull('mapScreen');mapFitted=false;applyZoom();
-  try{await loadLeaflet()}catch(e){$('mapSub').textContent='નકશો લોડ ન થયો. ઇન્ટરનેટ ચેક કરો';renderLocList();return}
-  if(!mapObj){
-    mapObj=L.map('map',{zoomControl:true}).setView([22.3039,70.8022],11);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(mapObj);
-    mapLayer=L.layerGroup().addTo(mapObj);
-  }
-  setTimeout(()=>{mapObj.invalidateSize();renderMap()},100);
-};
-$('mapBack').onclick=()=>history.back();
-$('mapFit').onclick=()=>{mapFitted=false;renderMap()};
-function renderMap(){
-  if(!mapOpen())return;
-  renderLocList();
-  if(!mapObj||!window.L)return;
-  mapLayer.clearLayers();const pts=[];
-  users.filter(u=>u.active&&u.loc&&u.loc.lat!=null).forEach(u=>{
-    const ll=[u.loc.lat,u.loc.lng];pts.push(ll);
-    const c=locColor(u);
-    if(u.loc.acc&&u.loc.acc<2000)L.circle(ll,{radius:u.loc.acc,color:c,weight:1,fillOpacity:.08}).addTo(mapLayer);
-    L.circleMarker(ll,{radius:9,color:'#fff',weight:3,fillColor:c,fillOpacity:1}).addTo(mapLayer)
-      .bindTooltip(esc(u.name||''),{permanent:true,direction:'top',offset:[0,-10],className:'map-lbl'})
-      .bindPopup(`<b>${esc(u.name||'')}</b><br>🕒 ${ago(u.loc.at)}<br>🎯 ±${u.loc.acc||'?'} મીટર<br><a href="${mapUrl(u.loc.lat+','+u.loc.lng)}" target="_blank" rel="noopener">Google Maps માં ખોલો ↗</a>${u.mobile?`<br><a href="tel:+91${esc(u.mobile)}">📞 ${esc(u.mobile)}</a>`:''}`);
-  });
-  if(!mapFitted&&pts.length){mapFitted=true;pts.length===1?mapObj.setView(pts[0],15):mapObj.fitBounds(pts,{padding:[40,40],maxZoom:16})}
-}
-function renderLocList(){
-  const act=users.filter(u=>u.active);
-  const withLoc=act.filter(u=>u.loc&&u.loc.lat!=null).sort((a,b)=>ms(b.loc.at)-ms(a.loc.at));
-  const without=act.filter(u=>!(u.loc&&u.loc.lat!=null));
-  const live=withLoc.filter(u=>Date.now()-ms(u.loc.at)<5*60000).length;
-  $('mapSub').textContent=live+' હાલ લાઇવ · '+withLoc.length+'/'+act.length+' નું લોકેશન મળ્યું';
-  $('locList').innerHTML=withLoc.map(u=>`<div class="l-row"><span class="l-dot" style="background:${locColor(u)}"></span>
-      <div class="l-mid"><b>${esc(u.name||'')}${u.uid===me.uid?' (તમે)':''}</b><small>🕒 ${ago(u.loc.at)} · ±${u.loc.acc||'?'} મી.</small></div>
-      <div class="l-btns"><button class="btn btn-light" data-fly="${u.uid}">નકશામાં</button><a class="btn btn-light" href="${mapUrl(u.loc.lat+','+u.loc.lng)}" target="_blank" rel="noopener">Google ↗</a></div></div>`).join('')
-    +without.map(u=>`<div class="l-row"><span class="l-dot" style="background:#e2e8f0"></span><div class="l-mid"><b>${esc(u.name||'')}</b><small>લોકેશન મળ્યું નથી (એપ ખોલી નથી અથવા લોકેશન બંધ છે)</small></div></div>`).join('')
-    +'<div class="hint" style="padding:12px 14px">🟢 5 મિનિટમાં · 🟠 30 મિનિટમાં · ⚪ જૂનું. એપ ખુલ્લી હોય ત્યારે દર 5 મિનિટે લોકેશન આવે છે.</div>';
-}
-$('locList').addEventListener('click',e=>{const b=e.target.closest('[data-fly]');if(!b||!mapObj)return;
-  const u=users.find(x=>x.uid===b.dataset.fly);if(u&&u.loc){mapObj.setView([u.loc.lat,u.loc.lng],16);$('map').scrollIntoView({behavior:'smooth'})}});
-setInterval(()=>{if(mapOpen())renderMap()},60000);
-
-/* Android back button closes chat/map screens */
+/* Android back button closes the chat screen */
 window.addEventListener('popstate',()=>{
   if(!$('chatScreen').classList.contains('hidden')&&curChat){closeConv();return}
   if(!$('chatScreen').classList.contains('hidden')){$('chatScreen').classList.add('hidden');document.body.classList.remove('full-open');paintUnread();return}
-  if(mapOpen()){$('mapScreen').classList.add('hidden');document.body.classList.remove('full-open');applyZoom()}
 });
 
 /* ================= VERSION ================= */
-const APP_VERSION='1.0.3';
+const APP_VERSION='1.0.4';
 const APP_DATE='26/09/2026';
 const APP_NEWS=[
+  '🚫 ટીમ લોકેશન (ટ્રેકિંગ) સુવિધા કાઢી નાખી, જૂનું સેવ થયેલું લોકેશન પણ ડિલીટ',
   '🔍 બે આંગળીથી ઝૂમ — અક્ષર મોટા થાય, બાજુમાં ખસવું ન પડે',
   '👤 હેડરમાં લોગો પૂરો અને નામ મોટું-રંગીન',
   '🏢 પોલીસ સ્ટેશન પ્રમાણે ગ્રુપ — સ્ટેશન દબાવો એટલે નામ, નામ દબાવો એટલે વિગત',
   '✔ ટીક માર્ક, ✏ સુધારો, 🗑 ડિલીટ, 📍 Google Maps, 📱 WhatsApp',
   '👥 લોગિન, નવું એકાઉન્ટ અને એડમિન મંજૂરી',
   '💬 ટીમ ચેટ — ગ્રુપ અને એકલામાં',
-  '🗺 એડમિન માટે ટીમ લોકેશન (દર 5 મિનિટે)',
   '🎨 8 થીમ, ડાર્ક મોડ',
   '📲 ફોનમાં ઇન્સ્ટોલ, ઓફલાઇન અને આપોઆપ અપડેટ'
 ];
@@ -1686,12 +1573,12 @@ const K_ZOOM='pea_zoom2',Z_MIN=70,Z_MAX=170;
 let zoom=lsGet(K_ZOOM,100);
 function applyZoom(){
   zoom=Math.max(Z_MIN,Math.min(Z_MAX,Math.round(zoom)));
-  document.documentElement.style.zoom=(mapOpen&&mapOpen())?'':(zoom/100);
+  document.documentElement.style.zoom=zoom/100;
 }
 (function(){
   let startD=0,startZ=100,raf=0,pinching=false;
   const dist=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);
-  const skip=()=>typeof mapOpen==='function'&&mapOpen();
+  const skip=()=>false;
   document.addEventListener('touchstart',e=>{
     if(e.touches.length===2&&!skip()){pinching=true;startD=dist(e.touches);startZ=zoom}
   },{passive:true});
