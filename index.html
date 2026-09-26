@@ -1588,19 +1588,16 @@ window.addEventListener('popstate',()=>{
 });
 
 /* ================= VERSION ================= */
-const APP_VERSION='2.5.1';
+const APP_VERSION='1.0.0';
 const APP_DATE='26/09/2026';
 const APP_NEWS=[
-  '🏢 પોલીસ સ્ટેશન પ્રમાણે ગ્રુપ — દબાવો એટલે નામ, નામ દબાવો એટલે વિગત',
-  '🔄 આપોઆપ અપડેટ — નવું વર્ઝન આવે એટલે એપ જાતે અપડેટ થશે',
-  '📍 દર 5 મિનિટે લોકેશન (હેડરમાંથી લોકેશનનું લખાણ હટાવ્યું)',
-  '💬 ચેટ બટન નીચે ડાબી બાજુ, 🔍 બે આંગળીથી ઝૂમ',
-  '🎨 8 નવી થીમ (રંગ) — સેટિંગ્સમાંથી બદલો, ડાર્ક મોડ પણ',
-  '🟦 રંગીન બોક્ષ અને એન્ટ્રી કાર્ડ',
+  '🏢 પોલીસ સ્ટેશન પ્રમાણે ગ્રુપ — સ્ટેશન દબાવો એટલે નામ, નામ દબાવો એટલે વિગત',
+  '✔ ટીક માર્ક, ✏ સુધારો, 🗑 ડિલીટ, 📍 Google Maps, 📱 WhatsApp',
+  '👥 લોગિન, નવું એકાઉન્ટ અને એડમિન મંજૂરી',
   '💬 ટીમ ચેટ — ગ્રુપ અને એકલામાં',
-  '🗺 એડમિન માટે ટીમ લોકેશન નકશો',
-  '📲 ફોનમાં એપ તરીકે ઇન્સ્ટોલ, નવો લોગો',
-  '🔍 ઝૂમ ઇન / આઉટ'
+  '🗺 એડમિન માટે ટીમ લોકેશન (દર 5 મિનિટે)',
+  '🎨 8 થીમ, ડાર્ક મોડ',
+  '📲 ફોનમાં ઇન્સ્ટોલ, ઓફલાઇન અને આપોઆપ અપડેટ'
 ];
 document.querySelectorAll('[data-ver]').forEach(el=>el.textContent='v'+APP_VERSION);
 $('verDate').textContent='· '+APP_DATE;
@@ -1617,7 +1614,7 @@ async function checkUpdate(manual){
   try{
     const r=await fetch('version.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)throw 0;
     const v=(await r.json()).version;
-    if(verNum(v)>verNum(APP_VERSION)){showUpdate(v);return true}
+    if(v&&v!==APP_VERSION){showUpdate(v);return true}
     if(manual)toast('✔ તમારી પાસે નવું જ વર્ઝન છે (v'+APP_VERSION+')');
   }catch(e){if(manual)toast('ઇન્ટરનેટ ચેક કરો')}
   return false;
@@ -1630,7 +1627,8 @@ async function doUpdate(){
 function showUpdate(v){
   if(updShown)return;updShown=true;
   // nothing open on screen -> update right away, otherwise ask
-  if(!busyUI()&&document.visibilityState==='visible'){toast('🔄 નવું વર્ઝન v'+v+' આવી રહ્યું છે...');setTimeout(doUpdate,1200);return}
+  let tried=null;try{tried=sessionStorage.getItem('pea_upd_try')}catch(e){}
+  if(tried!==v&&!busyUI()&&document.visibilityState==='visible'){try{sessionStorage.setItem('pea_upd_try',v)}catch(e){}toast('🔄 નવું વર્ઝન v'+v+' આવી રહ્યું છે...');setTimeout(doUpdate,1200);return}
   const d=document.createElement('div');d.className='upd-banner';
   d.innerHTML='<span>🔄 નવું વર્ઝન v'+esc(v)+' આવ્યું છે</span><button>અપડેટ કરો</button>';
   d.querySelector('button').onclick=doUpdate;document.body.appendChild(d);
