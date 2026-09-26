@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, user-scalable=yes">
 <meta name="theme-color" content="#1d4ed8">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Tanak Toli">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Tanak Toli</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Gujarati:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -173,6 +180,19 @@ main{max-width:1100px;margin:0 auto;padding:16px 16px 100px}
 .zoom-ctl button:active{background:#eef2f9}
 .zoom-ctl span{min-width:48px;text-align:center;font-size:13px;font-weight:700;color:var(--ink);cursor:pointer}
 html,body{overflow-x:hidden}
+.brand-logo{display:block;width:150px;height:150px;margin:0 auto 12px;border-radius:30px;box-shadow:0 10px 26px rgba(6,10,22,.35)}
+.brand-h{display:flex;align-items:center;gap:8px}
+.brand-h img{width:38px;height:38px;border-radius:10px;flex:none;margin:-6px 0;box-shadow:0 0 0 1.5px rgba(255,255,255,.25)}
+.inst-banner{display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,#eef4ff,#e0ebff);border:1.5px solid #bcd0ff;border-radius:14px;padding:10px 12px;margin-bottom:12px;text-align:left}
+.inst-banner img{width:40px;height:40px;border-radius:10px;flex:none}
+.inst-banner .it{flex:1;min-width:0;font-size:13px;line-height:1.45;color:var(--ink)}
+.inst-banner .it b{display:block;font-size:14px}
+.inst-banner .ib{background:var(--pri);color:#fff;border:none;border-radius:10px;padding:9px 12px;font-weight:700;cursor:pointer;flex:none}
+.inst-banner .ix{background:none;border:none;font-size:20px;color:var(--muted);cursor:pointer;flex:none;padding:0 4px}
+.auth-card .inst-banner{margin:18px 0 0}
+#iosHelp{position:fixed;inset:0;background:rgba(10,20,45,.6);z-index:120;display:flex;align-items:flex-end;justify-content:center}
+#iosHelp .modal{max-width:420px}
+#iosHelp ol{padding-left:20px;line-height:1.9;font-size:15px}
 </style>
 </head>
 <body>
@@ -210,9 +230,7 @@ html,body{overflow-x:hidden}
 <!-- ================= AUTH ================= -->
 <section id="authScreen" class="auth-wrap hidden">
   <div class="auth-card">
-    <div class="auth-logo">
-      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 3v6c0 5-3.5 9.5-8 11-4.5-1.5-8-6-8-11V5l8-3z"/><path d="M9 12l2 2 4-4"/></svg>
-    </div>
+    <img class="brand-logo" src="logo.png" alt="Tanak Toli" onerror="this.style.display='none'">
 
     <!-- Login -->
     <div id="loginBox" class="hidden">
@@ -228,6 +246,7 @@ html,body{overflow-x:hidden}
         <button class="link hidden" id="goSetup">પ્રથમ વખત? એડમિન એકાઉન્ટ બનાવો</button>
         <button class="link hidden" id="goCfg" style="color:var(--muted)">⚙ Firebase સેટિંગ બદલો</button>
       </div>
+      <div class="inst-banner hidden"></div>
     </div>
 
     <!-- Reset -->
@@ -283,7 +302,7 @@ html,body{overflow-x:hidden}
   <header>
     <div class="head-in">
       <div class="ttl">
-        <h2>📋 Tanak Toli</h2>
+        <h2 class="brand-h"><img src="logo.png" alt="" onerror="this.remove()">Tanak Toli</h2>
         <small><span id="whoami"></span><span class="net" id="net"><i></i><span>ઓનલાઇન</span></span></small>
       </div>
       <button class="icon-btn" id="setBtn" title="સેટિંગ્સ">
@@ -296,6 +315,7 @@ html,body{overflow-x:hidden}
   </header>
 
   <main>
+    <div class="inst-banner hidden"></div>
     <button class="req-banner hidden" id="reqBanner"></button>
     <div class="stats">
       <div class="stat active" data-f="all"><div class="n" id="stAll">0</div><div class="l">કુલ એન્ટ્રી</div></div>
@@ -436,6 +456,7 @@ html,body{overflow-x:hidden}
         <button class="btn btn-light sm admin-only hidden" id="oldImpBtn">📥 જૂની એપનો ડેટા ઉમેરો</button>
         <input type="file" id="bkFile" accept=".json" class="hidden">
       </div>
+      <div class="set-btns" style="margin-top:8px"><button class="btn btn-pri sm" id="instBtnSet">📲 ફોનમાં એપ ઇન્સ્ટોલ કરો</button></div>
       <div class="hint">ડેટા Google Firebase સર્વર પર સેવ થાય છે. ઇન્ટરનેટ ન હોય તો પણ એન્ટ્રી થશે, અને નેટ આવતાં જ બધાને સિંક થઈ જશે.</div>
     </div>
 
@@ -460,6 +481,13 @@ html,body{overflow-x:hidden}
   <button id="zOut" title="નાનું કરો (Zoom out)" aria-label="Zoom out">−</button>
   <span id="zVal" title="100% પર પાછા">100%</span>
   <button id="zIn" title="મોટું કરો (Zoom in)" aria-label="Zoom in">+</button>
+</div>
+
+<div id="iosHelp" class="hidden">
+  <div class="modal">
+    <div class="m-head"><h3>📲 ફોનમાં ઇન્સ્ટોલ કરો</h3><button class="close" id="iosClose">×</button></div>
+    <div id="iosSteps"></div>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -1126,6 +1154,46 @@ $('zIn').onclick=()=>{zoom+=10;applyZoom()};
 $('zOut').onclick=()=>{zoom-=10;applyZoom()};
 $('zVal').onclick=()=>{zoom=100;applyZoom();toast('સામાન્ય સાઇઝ (100%)')};
 applyZoom();
+
+/* ================= INSTALL (PWA) ================= */
+const K_INST_HIDE='pea_inst_hide';
+let deferredPrompt=null;
+const isStandalone=()=>window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;
+const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;paintInstall()});
+window.addEventListener('appinstalled',()=>{deferredPrompt=null;paintInstall();toast('Tanak Toli ફોનમાં ઇન્સ્ટોલ થઈ ગઈ ✔ હોમ સ્ક્રીન પરથી ખોલો')});
+function canOfferInstall(){return !isStandalone()&&(deferredPrompt||isIOS)}
+function paintInstall(){
+  const hidden=(lsGet(K_INST_HIDE,0)>Date.now())||!canOfferInstall();
+  document.querySelectorAll('.inst-banner').forEach(el=>{
+    el.classList.toggle('hidden',hidden);
+    el.innerHTML=`<img src="icon-192.png" alt="" onerror="this.remove()"><div class="it"><b>Tanak Toli ફોનમાં ઇન્સ્ટોલ કરો</b>હોમ સ્ક્રીન પર આઇકન આવશે, એપની જેમ ખૂલશે</div><button class="ib" data-inst>ઇન્સ્ટોલ</button><button class="ix" data-inst-x title="પછી">×</button>`;
+  });
+  $('instBtnSet').classList.toggle('hidden',isStandalone());
+}
+function doInstall(){
+  if(deferredPrompt){
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(c=>{if(c.outcome!=='accepted')toast('ઇન્સ્ટોલ રદ કર્યું');deferredPrompt=null;paintInstall()});
+    return;
+  }
+  const steps=isIOS
+    ?`<ol><li>આ પેજ <b>Safari</b> માં ખોલો (Chrome માં નહીં)</li><li>નીચે વચ્ચે <b>Share</b> બટન <b>⬆</b> દબાવો</li><li>નીચે સ્ક્રોલ કરી <b>"Add to Home Screen"</b> દબાવો</li><li>ઉપર જમણે <b>Add</b> દબાવો</li></ol>`
+    :`<ol><li>આ પેજ <b>Chrome</b> માં ખોલો</li><li>ઉપર જમણે <b>⋮</b> (ત્રણ ટપકાં) દબાવો</li><li><b>"Install app"</b> અથવા <b>"Add to Home screen"</b> દબાવો</li><li><b>Install</b> દબાવો</li></ol><div class="hint">ઇન્સ્ટોલનો વિકલ્પ ન દેખાય તો ખાતરી કરો કે એપ https:// વાળી લિંકથી (GitHub) ખોલી છે, ફાઇલ તરીકે નહીં.</div>`;
+  $('iosSteps').innerHTML=steps+'<div class="hint" style="margin-top:10px">પછી હોમ સ્ક્રીન પર <b>Tanak Toli</b> નો આઇકન આવી જશે.</div>';
+  $('iosHelp').classList.remove('hidden');
+}
+document.addEventListener('click',e=>{
+  if(e.target.closest('[data-inst]'))doInstall();
+  if(e.target.closest('[data-inst-x]')){lsSet(K_INST_HIDE,Date.now()+3*24*3600*1000);paintInstall()}
+});
+$('instBtnSet').onclick=doInstall;
+$('iosClose').onclick=()=>$('iosHelp').classList.add('hidden');
+$('iosHelp').addEventListener('click',e=>{if(e.target.id==='iosHelp')$('iosHelp').classList.add('hidden')});
+paintInstall();
 
 /* ================= START ================= */
 if(!cfg)showCfg();else boot();
