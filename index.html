@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<meta name="theme-color" content="#1d4ed8">
+<title>Tanak Toli</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Gujarati:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<style>
+:root{
+  --bg:#f1f4f9; --card:#ffffff; --ink:#15213b; --muted:#65718a; --line:#e2e7f0;
+  --pri:#1d4ed8; --pri2:#1e3a8a; --ok:#16a34a; --okbg:#e8f7ee; --warn:#d97706; --warnbg:#fff4e0;
+  --bad:#dc2626; --shadow:0 6px 24px rgba(20,33,61,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans Gujarati',system-ui,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;font-size:15px}
+button,input,select,textarea{font-family:inherit;font-size:15px}
+a{color:var(--pri)}
+.hidden{display:none!important}
+
+/* ---------- Auth / setup ---------- */
+.auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;
+  background:linear-gradient(135deg,#0f1f4d 0%,#1d4ed8 60%,#3b82f6 100%)}
+.auth-card{background:var(--card);width:100%;max-width:400px;border-radius:20px;padding:28px 22px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.auth-card.wide{max-width:640px}
+.auth-logo{width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,var(--pri),var(--pri2));
+  display:flex;align-items:center;justify-content:center;margin:0 auto 12px;color:#fff}
+.auth-card h1{text-align:center;font-size:22px;margin-bottom:4px}
+.auth-card .sub{text-align:center;color:var(--muted);font-size:13px;margin-bottom:20px}
+.steps{padding-left:20px;margin-bottom:16px;font-size:14px;line-height:1.7}
+.steps li{margin-bottom:10px}
+.steps i{font-style:normal;background:#eef2f9;padding:1px 6px;border-radius:6px;font-size:13px;white-space:nowrap}
+pre.rules{background:#0f172a;color:#d6e2ff;font-size:11.5px;line-height:1.5;padding:12px;border-radius:10px;overflow:auto;max-height:220px;margin:8px 0;white-space:pre}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#334155}
+.field input,.field select,.field textarea{width:100%;padding:11px 13px;border:1.5px solid var(--line);border-radius:11px;background:#fbfcfe;outline:none;transition:.15s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--pri);background:#fff;box-shadow:0 0 0 3px rgba(29,78,216,.12)}
+.field textarea{resize:vertical;min-height:80px}
+#cfgIn{font-family:ui-monospace,monospace;font-size:12.5px}
+.btn{border:none;border-radius:11px;padding:11px 16px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:7px;transition:.15s;text-decoration:none}
+.btn:disabled{opacity:.6;cursor:wait}
+.btn-pri{background:var(--pri);color:#fff}.btn-pri:hover{background:var(--pri2)}
+.btn-light{background:#eef2f9;color:var(--ink)}.btn-light:hover{background:#e2e8f3}
+.btn-danger{background:#fdecec;color:var(--bad)}.btn-danger:hover{background:#fbdada}
+.btn-block{width:100%}
+.link{background:none;border:none;color:var(--pri);font-weight:600;cursor:pointer;font-size:13px}
+.auth-foot{text-align:center;margin-top:14px;display:flex;flex-direction:column;gap:8px;align-items:center}
+.err{color:var(--bad);font-size:13px;min-height:18px;margin-bottom:8px;text-align:center}
+.pw-wrap{position:relative}
+.pw-wrap input{padding-right:44px}
+.pw-eye{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);padding:6px}
+
+/* ---------- App ---------- */
+header{background:linear-gradient(135deg,#0f1f4d,#1d4ed8);color:#fff;padding:14px 16px;position:sticky;top:0;z-index:20;box-shadow:var(--shadow)}
+.head-in{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:10px}
+.head-in .ttl{flex:1;min-width:0}
+.head-in h2{font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.head-in small{opacity:.9;font-size:12px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.net{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.15);padding:1px 8px;border-radius:20px;font-size:11px}
+.net i{width:8px;height:8px;border-radius:50%;background:#4ade80;display:inline-block}
+.net.off i{background:#fbbf24}
+.icon-btn{background:rgba(255,255,255,.14);border:none;color:#fff;width:40px;height:40px;border-radius:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex:none}
+.icon-btn:hover{background:rgba(255,255,255,.25)}
+main{max-width:1100px;margin:0 auto;padding:16px 16px 100px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.stat{background:var(--card);border-radius:14px;padding:14px;box-shadow:var(--shadow);cursor:pointer;border:2px solid transparent;transition:.15s}
+.stat.active{border-color:var(--pri)}
+.stat .n{font-size:26px;font-weight:700}
+.stat .l{font-size:12px;color:var(--muted)}
+.stat.ok .n{color:var(--ok)}.stat.pend .n{color:var(--warn)}
+.toolbar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.search{flex:1;min-width:200px;position:relative}
+.search input{width:100%;padding:12px 14px 12px 40px;border:1.5px solid var(--line);border-radius:12px;background:#fff;outline:none}
+.search input:focus{border-color:var(--pri)}
+.search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.list{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
+@media(max-width:400px){.list{grid-template-columns:1fr}}
+.entry{background:var(--card);border-radius:16px;padding:16px;box-shadow:var(--shadow);border-left:5px solid var(--warn);display:flex;flex-direction:column;gap:10px;transition:.2s}
+.entry.done{border-left-color:var(--ok);background:linear-gradient(0deg,#fff, #f7fdf9)}
+.e-top{display:flex;gap:12px;align-items:flex-start}
+.tick{width:34px;height:34px;flex:none;border-radius:10px;border:2.5px solid #cbd3e1;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:transparent;transition:.15s}
+.tick:hover{border-color:var(--ok)}
+.entry.done .tick{background:var(--ok);border-color:var(--ok);color:#fff}
+.e-name{font-weight:700;font-size:17px;word-break:break-word}
+.entry.done .e-name{text-decoration:line-through;text-decoration-color:rgba(22,163,74,.5)}
+.badge{display:inline-block;font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:20px;margin-top:4px}
+.b-ok{background:var(--okbg);color:var(--ok)}.b-pend{background:var(--warnbg);color:var(--warn)}
+.b-sync{background:#eef2f9;color:var(--muted);margin-left:4px}
+.e-row{display:flex;align-items:flex-start;gap:9px;font-size:14px;color:#334155;flex-wrap:wrap}
+.e-row svg{flex:none;margin-top:2px;color:var(--muted)}
+.e-row a{color:var(--pri);text-decoration:none;font-weight:500;word-break:break-word}
+.e-row a:hover{text-decoration:underline}
+.maplink{display:inline-flex;align-items:center;gap:6px;background:#eaf1ff;padding:5px 10px;border-radius:9px}
+.e-det{background:#f6f8fc;border-radius:10px;padding:9px 11px;font-size:13.5px;white-space:pre-wrap;word-break:break-word}
+.e-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;border-top:1px dashed var(--line);padding-top:10px}
+.e-date{font-size:11.5px;color:var(--muted);line-height:1.5}
+.e-act{display:flex;gap:6px;flex:none;margin:-4px -4px 0 0}
+.act-btn{width:36px;height:36px;border:none;border-radius:10px;background:#eef2f9;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:.15s}
+.act-btn:hover{background:#e2e8f3}
+.act-btn.del{background:#fdecec}.act-btn.del:hover{background:#fbdada}
+.sm{padding:7px 11px;font-size:13px;border-radius:9px}
+.empty{text-align:center;padding:50px 20px;color:var(--muted);background:var(--card);border-radius:16px;box-shadow:var(--shadow)}
+.empty svg{color:#b6c1d6;margin-bottom:10px}
+.fab{position:fixed;right:20px;bottom:20px;width:60px;height:60px;border-radius:50%;background:var(--pri);color:#fff;border:none;box-shadow:0 10px 30px rgba(29,78,216,.45);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:15}
+.fab:hover{background:var(--pri2)}
+
+/* ---------- Modal ---------- */
+.overlay{position:fixed;inset:0;background:rgba(10,20,45,.55);display:flex;align-items:flex-end;justify-content:center;z-index:50;padding:0}
+.modal{background:#fff;width:100%;max-width:520px;max-height:92vh;overflow:auto;border-radius:20px 20px 0 0;padding:20px;animation:up .2s ease}
+@media(min-width:640px){.overlay{align-items:center;padding:16px}.modal{border-radius:20px}}
+@keyframes up{from{transform:translateY(30px);opacity:0}to{transform:none;opacity:1}}
+.m-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.m-head h3{font-size:18px}
+.close{background:#eef2f9;border:none;width:36px;height:36px;border-radius:10px;cursor:pointer;font-size:20px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:480px){.row2{grid-template-columns:1fr}.stats .n{font-size:22px}}
+.loc-wrap{display:flex;gap:8px}
+.loc-wrap input{flex:1;min-width:0}
+.loc-wrap .btn{flex:none;padding:0 12px}
+.chk{display:flex;align-items:center;gap:10px;background:#f6f8fc;padding:12px;border-radius:11px;cursor:pointer;font-weight:600}
+.chk input{width:20px;height:20px;accent-color:var(--ok)}
+.m-foot{display:flex;gap:10px;margin-top:18px}
+.m-foot .btn{flex:1}
+.set-sec{border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.set-sec h4{font-size:15px;margin-bottom:10px}
+.set-btns{display:flex;flex-wrap:wrap;gap:8px}
+.hint{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.55}
+.u-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line);flex-wrap:wrap}
+.u-row:first-child{border-top:none}
+.u-info{flex:1;min-width:160px}
+.u-info b{display:block;font-size:14px}
+.u-info small{color:var(--muted);font-size:12px;word-break:break-all}
+.u-off{opacity:.55}
+.role{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;margin-left:6px}
+.r-admin{background:#e0e7ff;color:#3730a3}.r-staff{background:#eef2f9;color:var(--muted)}
+.u-btns{display:flex;gap:6px;flex-wrap:wrap}
+.req-row{background:#fff8e6;border:1px solid #fde3a7;border-radius:12px;padding:10px 12px;margin-bottom:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.btn-ok{background:var(--ok);color:#fff}.btn-ok:hover{background:#12803a}
+.req-banner{width:100%;background:#fff4e0;border:1.5px solid #fbbf24;color:#92400e;font-weight:700;padding:12px 14px;border-radius:13px;margin-bottom:12px;cursor:pointer;text-align:left}
+.icon-btn{position:relative}
+.dot-badge{position:absolute;top:-4px;right:-4px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 4px}
+.u-btns .btn{padding:5px 9px;font-size:12px;border-radius:8px}
+
+/* ---------- WhatsApp ---------- */
+.mob-btn{background:#eaf1ff;border:none;color:var(--pri);font-weight:600;padding:5px 10px;border-radius:9px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.mob-btn:hover{background:#dbe7ff}
+.wa-b{font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;align-self:center}
+.wa-yes{background:#dcf8e6;color:#128c4a}.wa-no{background:#fdecec;color:var(--bad)}.wa-unk{background:#eef2f9;color:var(--muted)}
+.wa-head{text-align:center;margin-bottom:14px}
+.wa-num{font-size:22px;font-weight:700;letter-spacing:.5px}
+.wa-name{color:var(--muted);font-size:13px}
+.wa-opt{width:100%;display:flex;align-items:center;gap:12px;padding:13px 14px;border:1.5px solid var(--line);border-radius:13px;background:#fff;cursor:pointer;margin-bottom:9px;text-align:left}
+.wa-opt:hover{border-color:#25d366;background:#f4fdf7}
+.wa-ic{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex:none;color:#fff;font-size:18px}
+.wa-opt b{display:block;font-size:15px}
+.wa-opt small{color:var(--muted);font-size:12px}
+.wa-sec{font-size:12.5px;font-weight:700;color:var(--muted);margin:14px 0 8px}
+.wa-status{display:flex;gap:8px}
+.wa-status .btn{flex:1}
+.wa-status .btn.on-yes{background:#25d366;color:#fff}
+.wa-status .btn.on-no{background:var(--bad);color:#fff}
+
+#loading{position:fixed;inset:0;background:rgba(241,244,249,.85);z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--muted)}
+.spin{width:38px;height:38px;border:4px solid #d6deec;border-top-color:var(--pri);border-radius:50%;animation:sp 0.8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.toast{position:fixed;left:50%;top:18px;transform:translateX(-50%);background:#15213b;color:#fff;padding:11px 18px;border-radius:12px;font-size:14px;z-index:300;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:.25s;max-width:90vw;text-align:center}
+.toast.show{opacity:1}
+.zoom-ctl{position:fixed;left:14px;bottom:20px;z-index:40;display:flex;align-items:center;background:#fff;border-radius:30px;box-shadow:0 6px 20px rgba(20,33,61,.18);overflow:hidden;border:1px solid var(--line)}
+.zoom-ctl button{border:none;background:none;width:44px;height:44px;font-size:20px;font-weight:700;color:var(--pri);cursor:pointer}
+.zoom-ctl button:active{background:#eef2f9}
+.zoom-ctl span{min-width:48px;text-align:center;font-size:13px;font-weight:700;color:var(--ink);cursor:pointer}
+html,body{overflow-x:hidden}
+</style>
+</head>
+<body>
+
+<div id="loading"><div class="spin"></div><div>લોડ થાય છે...</div></div>
+
+<!-- ================= FIREBASE SETUP ================= -->
+<section id="cfgScreen" class="auth-wrap hidden">
+  <div class="auth-card wide">
+    <div class="auth-logo"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20L7 3l4 7 2-4 7 14-8 4z"/></svg></div>
+    <h1>Firebase સેટઅપ</h1>
+    <p class="sub">આ ફક્ત એક જ વાર કરવાનું છે. પછી બધા કર્મચારી અલગ અલગ ફોનથી એક જ ડેટા જોઈ-ભરી શકશે.</p>
+    <ol class="steps">
+      <li><b>પ્રોજેક્ટ બનાવો:</b> <a href="https://console.firebase.google.com" target="_blank" rel="noopener">console.firebase.google.com</a> ખોલો → <i>Create a project</i> → નામ આપો (દા.ત. tanak-toli) → Google Analytics બંધ રાખો → <i>Create project</i>.</li>
+      <li><b>લોગિન ચાલુ કરો:</b> ડાબી બાજુના મેનુમાં <i>Security</i> → <i>Authentication</i> (મોબાઇલમાં મેનુ ☰ માં છુપાયેલું હોય છે) → <i>Get started</i> → ઉપર <i>Sign-in method</i> ટેબ → <i>Email/Password</i> → પહેલી સ્વિચ <i>Enable</i> ચાલુ કરો (બીજી "Email link" બંધ રાખો) → <i>Save</i>.</li>
+      <li><b>ડેટાબેઝ બનાવો:</b> ડાબી બાજુ <i>Databases &amp; Storage</i> → <i>Firestore</i> → <i>Create database</i> → Edition પૂછે તો <i>Standard</i> → લોકેશન <i>asia-south1 (Mumbai)</i> → <i>Production mode</i> → <i>Create</i>.</li>
+      <li><b>સુરક્ષા નિયમો (Rules):</b> Firestore માં ઉપર <i>Rules</i> ટેબ ખોલો → ત્યાં લખેલું બધું કાઢી નાખી નીચેના Rules પેસ્ટ કરો → <i>Publish</i>.
+        <pre class="rules" id="rulesTxt"></pre>
+        <button class="btn btn-light sm" id="copyRules">📋 Rules કૉપી કરો</button>
+      </li>
+      <li><b>Config કૉપી કરો:</b> ઉપર ડાબે ⚙ → <i>Project settings</i> → નીચે <i>Your apps</i> માં <i>&lt;/&gt;</i> (Web) આઇકન → કોઈ પણ નામ આપી <i>Register app</i> → જે <code>const firebaseConfig = { ... }</code> દેખાય તે આખું કૉપી કરી નીચે પેસ્ટ કરો.</li>
+    </ol>
+    <div class="field"><label>firebaseConfig અહીં પેસ્ટ કરો</label>
+      <textarea id="cfgIn" rows="8" placeholder='const firebaseConfig = {
+  apiKey: "AIza...",
+  authDomain: "....firebaseapp.com",
+  projectId: "...",
+  ...
+};'></textarea></div>
+    <div class="err" id="cfgErr"></div>
+    <button class="btn btn-pri btn-block" id="cfgSave">સેવ કરી આગળ વધો →</button>
+  </div>
+</section>
+
+<!-- ================= AUTH ================= -->
+<section id="authScreen" class="auth-wrap hidden">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 3v6c0 5-3.5 9.5-8 11-4.5-1.5-8-6-8-11V5l8-3z"/><path d="M9 12l2 2 4-4"/></svg>
+    </div>
+
+    <!-- Login -->
+    <div id="loginBox" class="hidden">
+      <h1>Tanak Toli</h1>
+      <p class="sub">લોગિન કરવા વિગત ભરો</p>
+      <div class="field"><label>યુઝર આઇડી (ઇમેઇલ)</label><input id="liUser" type="email" autocomplete="username" placeholder="name@gmail.com"></div>
+      <div class="field"><label>પાસવર્ડ</label><div class="pw-wrap"><input id="liPass" type="password" autocomplete="current-password"><button class="pw-eye" type="button" data-eye="liPass">👁</button></div></div>
+      <div class="err" id="liErr"></div>
+      <button class="btn btn-pri btn-block" id="liBtn">લોગિન</button>
+      <div class="auth-foot">
+        <button class="btn btn-light btn-block" id="goSignup">👤 નવું એકાઉન્ટ બનાવો</button>
+        <button class="link" id="goReset">પાસવર્ડ ભૂલી ગયા? રી-સેટ કરો</button>
+        <button class="link hidden" id="goSetup">પ્રથમ વખત? એડમિન એકાઉન્ટ બનાવો</button>
+        <button class="link hidden" id="goCfg" style="color:var(--muted)">⚙ Firebase સેટિંગ બદલો</button>
+      </div>
+    </div>
+
+    <!-- Reset -->
+    <div id="resetBox" class="hidden">
+      <h1>પાસવર્ડ રી-સેટ</h1>
+      <p class="sub">તમારો ઇમેઇલ લખો. નવો પાસવર્ડ સેટ કરવાની લિંક ઇમેઇલમાં આવશે.</p>
+      <div class="field"><label>યુઝર આઇડી (ઇમેઇલ)</label><input id="rsUser" type="email"></div>
+      <div class="err" id="rsErr"></div>
+      <button class="btn btn-pri btn-block" id="rsBtn">રી-સેટ લિંક મોકલો</button>
+      <div class="auth-foot"><button class="link" data-goto="loginBox">← લોગિન પર પાછા</button></div>
+    </div>
+
+    <!-- Signup -->
+    <div id="signupBox" class="hidden">
+      <h1>નવું એકાઉન્ટ</h1>
+      <p class="sub">એકાઉન્ટ બનાવ્યા પછી એડમિન મંજૂરી આપશે, ત્યાર પછી એપ ખૂલશે.</p>
+      <div class="field"><label>પૂરું નામ *</label><input id="sgName" placeholder="દા.ત. હે.કો. પરમાર"></div>
+      <div class="field"><label>મોબાઇલ નંબર</label><input id="sgMobile" inputmode="numeric" maxlength="10" placeholder="10 અંક"></div>
+      <div class="field"><label>યુઝર આઇડી (ઇમેઇલ) *</label><input id="sgEmail" type="email" autocomplete="username" placeholder="name@gmail.com"></div>
+      <div class="field"><label>પાસવર્ડ (ઓછામાં ઓછા 6 અક્ષર) *</label><div class="pw-wrap"><input id="sgPass" type="password" autocomplete="new-password"><button class="pw-eye" type="button" data-eye="sgPass">👁</button></div></div>
+      <div class="field"><label>પાસવર્ડ ફરીથી *</label><input id="sgPass2" type="password" autocomplete="new-password"></div>
+      <div class="err" id="sgErr"></div>
+      <button class="btn btn-pri btn-block" id="sgBtn">એકાઉન્ટ બનાવો</button>
+      <div class="auth-foot"><button class="link" data-goto="loginBox">← પહેલેથી એકાઉન્ટ છે? લોગિન કરો</button></div>
+    </div>
+
+    <!-- Waiting for approval -->
+    <div id="pendingBox" class="hidden" style="text-align:center">
+      <div style="font-size:48px;margin-bottom:6px">⏳</div>
+      <h1>મંજૂરી બાકી છે</h1>
+      <p class="sub" style="margin-bottom:12px">તમારી વિનંતી એડમિનને મોકલી દીધી છે.<br>એડમિન મંજૂર કરશે એટલે એપ <b>આપોઆપ ખૂલી જશે</b>. આ પેજ ખુલ્લું રાખી શકો છો.</p>
+      <div class="e-det" style="text-align:left;margin-bottom:16px" id="pendInfo"></div>
+      <button class="btn btn-light btn-block" id="pendLogout">લોગઆઉટ</button>
+    </div>
+
+    <!-- First admin -->
+    <div id="adminBox" class="hidden">
+      <h1>એડમિન એકાઉન્ટ</h1>
+      <p class="sub">આ પહેલું એકાઉન્ટ એડમિન બનશે. એડમિન બીજા કર્મચારીઓ ઉમેરી શકશે.</p>
+      <div class="field"><label>તમારું નામ</label><input id="adName" placeholder="દા.ત. પો.સ.ઇ. મકવાણા"></div>
+      <div class="field"><label>યુઝર આઇડી (ઇમેઇલ)</label><input id="adEmail" type="email" autocomplete="username"></div>
+      <div class="field"><label>પાસવર્ડ (ઓછામાં ઓછા 6 અક્ષર)</label><div class="pw-wrap"><input id="adPass" type="password" autocomplete="new-password"><button class="pw-eye" type="button" data-eye="adPass">👁</button></div></div>
+      <div class="field"><label>પાસવર્ડ ફરીથી</label><input id="adPass2" type="password" autocomplete="new-password"></div>
+      <div class="err" id="adErr"></div>
+      <button class="btn btn-pri btn-block" id="adBtn">એડમિન એકાઉન્ટ બનાવો</button>
+      <div class="auth-foot"><button class="link" data-goto="loginBox">← લોગિન પર પાછા</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= APP ================= -->
+<section id="appScreen" class="hidden">
+  <header>
+    <div class="head-in">
+      <div class="ttl">
+        <h2>📋 Tanak Toli</h2>
+        <small><span id="whoami"></span><span class="net" id="net"><i></i><span>ઓનલાઇન</span></span></small>
+      </div>
+      <button class="icon-btn" id="setBtn" title="સેટિંગ્સ">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg>
+      </button>
+      <button class="icon-btn" id="logoutBtn" title="લોગઆઉટ">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <button class="req-banner hidden" id="reqBanner"></button>
+    <div class="stats">
+      <div class="stat active" data-f="all"><div class="n" id="stAll">0</div><div class="l">કુલ એન્ટ્રી</div></div>
+      <div class="stat ok" data-f="done"><div class="n" id="stDone">0</div><div class="l">✔ ટીક થયેલ</div></div>
+      <div class="stat pend" data-f="pending"><div class="n" id="stPend">0</div><div class="l">⏳ બાકી</div></div>
+    </div>
+    <div class="toolbar">
+      <div class="search">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input id="q" placeholder="નામ, મોબાઇલ, પોલીસ સ્ટેશન, લોકેશનથી શોધો...">
+      </div>
+      <button class="btn btn-pri" id="addBtn2">＋ નવી એન્ટ્રી</button>
+    </div>
+    <div class="list" id="list"></div>
+    <div class="empty hidden" id="empty">
+      <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+      <div id="emptyTxt">હજુ કોઈ એન્ટ્રી નથી.</div>
+    </div>
+  </main>
+  <button class="fab" id="addBtn" title="નવી એન્ટ્રી">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+  </button>
+</section>
+
+<!-- Entry modal -->
+<div class="overlay hidden" id="entryModal">
+  <div class="modal">
+    <div class="m-head"><h3 id="mTitle">નવી એન્ટ્રી</h3><button class="close" data-close="entryModal">×</button></div>
+    <div class="field"><label>નામ *</label><input id="fName" placeholder="પૂરું નામ"></div>
+    <div class="row2">
+      <div class="field"><label>મોબાઇલ નંબર</label><input id="fMobile" inputmode="numeric" maxlength="10" placeholder="10 અંક"></div>
+      <div class="field"><label>પોલીસ સ્ટેશનનું નામ</label><input id="fStation" list="stationList" placeholder="દા.ત. ગોંડલ તાલુકા"><datalist id="stationList"></datalist></div>
+    </div>
+    <div class="field"><label>લોકેશન (સરનામું અથવા Lat,Long)</label>
+      <div class="loc-wrap">
+        <input id="fLoc" placeholder="દા.ત. રેલવે સ્ટેશન, રાજકોટ">
+        <button class="btn btn-light" type="button" id="gpsBtn" title="હાલનું લોકેશન લો">📍 GPS</button>
+      </div>
+      <div class="hint">📍 GPS દબાવવાથી તમારું હાલનું લોકેશન આપમેળે આવી જશે.</div>
+    </div>
+    <div class="field"><label>વિગત</label><textarea id="fDet" placeholder="જરૂરી વિગત લખો..."></textarea></div>
+    <label class="chk"><input type="checkbox" id="fDone"> ✔ ટીક માર્ક (કામ પૂર્ણ)</label>
+    <div class="err" id="fErr" style="margin-top:10px"></div>
+    <div class="m-foot">
+      <button class="btn btn-light" data-close="entryModal">રદ કરો</button>
+      <button class="btn btn-pri" id="saveBtn">સેવ કરો</button>
+    </div>
+  </div>
+</div>
+
+<!-- WhatsApp sheet -->
+<div class="overlay hidden" id="waModal">
+  <div class="modal">
+    <div class="m-head"><h3>📱 WhatsApp</h3><button class="close" data-close="waModal">×</button></div>
+    <div class="wa-head">
+      <div class="wa-num" id="waNum"></div>
+      <div class="wa-name" id="waName"></div>
+    </div>
+    <div class="wa-sec">કઈ WhatsApp માંથી ખોલવું છે?</div>
+    <div id="waAndroid">
+      <button class="wa-opt" data-app="wa">
+        <span class="wa-ic" style="background:#25d366">✆</span>
+        <span><b>WhatsApp</b><small>સાદું WhatsApp</small></span>
+      </button>
+      <button class="wa-opt" data-app="w4b">
+        <span class="wa-ic" style="background:#128c7e">B</span>
+        <span><b>WhatsApp Business</b><small>બિઝનેસ WhatsApp</small></span>
+      </button>
+    </div>
+    <button class="wa-opt" data-app="ask">
+      <span class="wa-ic" style="background:#1d4ed8">⇄</span>
+      <span><b>ફોન પૂછે તેમાંથી પસંદ કરો</b><small>ડ્યુઅલ / ક્લોન WhatsApp હોય તો અહીંથી</small></span>
+    </button>
+    <div class="hint" style="margin-top:4px">
+      WhatsApp માં ચેટ ખુલે પછી ઉપર 📞 (વોઇસ) અથવા 🎥 (વિડિયો) દબાવી કૉલ કરો.<br>
+      નંબર WhatsApp પર નહીં હોય તો WhatsApp જાતે જ "આ નંબર WhatsApp પર નથી" એવું બતાવશે.
+    </div>
+    <div class="wa-sec">આ નંબર પર WhatsApp છે?</div>
+    <div class="wa-status">
+      <button class="btn btn-light sm" data-was="yes">✔ છે</button>
+      <button class="btn btn-light sm" data-was="no">✖ નથી</button>
+      <button class="btn btn-light sm" data-was="">? ખબર નથી</button>
+    </div>
+    <div class="hint">એક વાર ચેક કરી અહીં નોંધી દો, પછી બધાને કાર્ડ પર જ દેખાશે.</div>
+    <div class="wa-sec">બીજા વિકલ્પ</div>
+    <div class="set-btns">
+      <a class="btn btn-light sm" id="waTel" href="#">📞 સાદો ફોન કૉલ</a>
+      <button class="btn btn-light sm" id="waCopy">📋 નંબર કૉપી</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings modal -->
+<div class="overlay hidden" id="setModal">
+  <div class="modal">
+    <div class="m-head"><h3>⚙ સેટિંગ્સ</h3><button class="close" data-close="setModal">×</button></div>
+
+    <div class="set-sec hidden" id="reqWrap" style="border-color:#fbbf24">
+      <h4>🔔 મંજૂરી માટે નવી વિનંતીઓ</h4>
+      <div id="reqList"></div>
+    </div>
+
+    <div class="set-sec">
+      <h4>👤 મારું એકાઉન્ટ</h4>
+      <div class="field"><label>મારું નામ</label>
+        <div class="loc-wrap"><input id="myName"><button class="btn btn-light" id="myNameBtn">સેવ</button></div></div>
+      <div class="field"><label>હાલનો પાસવર્ડ</label><input id="cpOld" type="password" autocomplete="current-password"></div>
+      <div class="row2">
+        <div class="field"><label>નવો પાસવર્ડ</label><input id="cpNew" type="password" autocomplete="new-password"></div>
+        <div class="field"><label>નવો પાસવર્ડ ફરીથી</label><input id="cpNew2" type="password" autocomplete="new-password"></div>
+      </div>
+      <div class="err" id="cpErr" style="text-align:left"></div>
+      <button class="btn btn-pri sm" id="cpBtn">પાસવર્ડ બદલો</button>
+    </div>
+
+    <div class="set-sec admin-only">
+      <h4>👥 કર્મચારીઓ</h4>
+      <div class="row2">
+        <div class="field"><label>નામ</label><input id="euName"></div>
+        <div class="field"><label>ઇમેઇલ (યુઝર આઇડી)</label><input id="euEmail" type="email"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>પાસવર્ડ (6+ અક્ષર)</label><input id="euPass" type="text" autocomplete="off"></div>
+        <div class="field"><label>રોલ</label><select id="euRole"><option value="staff">સ્ટાફ</option><option value="admin">એડમિન</option></select></div>
+      </div>
+      <div class="err" id="euErr" style="text-align:left"></div>
+      <button class="btn btn-pri sm" id="euBtn">＋ કર્મચારી ઉમેરો</button>
+      <div class="hint">કર્મચારીને ઇમેઇલ અને પાસવર્ડ આપી દો. તે પોતાના ફોનમાં લોગિન કરી શકશે. "બંધ કરો" દબાવવાથી તે તરત લોગિન નહીં કરી શકે.</div>
+      <div id="userList" style="margin-top:10px"></div>
+    </div>
+
+    <div class="set-sec">
+      <h4>📤 ડેટા</h4>
+      <div class="set-btns">
+        <button class="btn btn-light sm" id="csvBtn">📊 Excel (CSV) ડાઉનલોડ</button>
+        <button class="btn btn-light sm" id="bkBtn">💾 બેકઅપ ડાઉનલોડ</button>
+        <button class="btn btn-light sm admin-only" id="rsBkBtn">♻ બેકઅપમાંથી ઉમેરો</button>
+        <button class="btn btn-light sm admin-only hidden" id="oldImpBtn">📥 જૂની એપનો ડેટા ઉમેરો</button>
+        <input type="file" id="bkFile" accept=".json" class="hidden">
+      </div>
+      <div class="hint">ડેટા Google Firebase સર્વર પર સેવ થાય છે. ઇન્ટરનેટ ન હોય તો પણ એન્ટ્રી થશે, અને નેટ આવતાં જ બધાને સિંક થઈ જશે.</div>
+    </div>
+
+    <div class="set-sec admin-only">
+      <h4>🔧 Firebase / એપ ફાઇલ</h4>
+      <div class="set-btns">
+        <button class="btn btn-light sm" id="dlCfgBtn">⬇ સેટિંગ સાથેની એપ ફાઇલ ડાઉનલોડ</button>
+        <button class="btn btn-light sm" id="copyRules2">📋 Firestore Rules કૉપી</button>
+        <button class="btn btn-light sm hidden" id="resetCfgBtn">⚙ Firebase સેટિંગ બદલો</button>
+      </div>
+      <div class="hint">આ ફાઇલમાં તમારું Firebase સેટિંગ અંદર જ હશે. આ જ ફાઇલ કર્મચારીઓને આપો અથવા વેબસાઇટ પર મૂકો, એટલે તેમને સેટઅપ નહીં કરવું પડે.</div>
+    </div>
+
+    <div class="set-sec admin-only">
+      <h4>⚠ જોખમી વિભાગ</h4>
+      <button class="btn btn-danger sm" id="clearDoneBtn">ટીક થયેલ બધી એન્ટ્રી ડિલીટ કરો</button>
+    </div>
+  </div>
+</div>
+
+<div class="zoom-ctl" id="zoomCtl">
+  <button id="zOut" title="નાનું કરો (Zoom out)" aria-label="Zoom out">−</button>
+  <span id="zVal" title="100% પર પાછા">100%</span>
+  <button id="zIn" title="મોટું કરો (Zoom in)" aria-label="Zoom in">+</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+const ORIGINAL_HTML='<!DOCTYPE html>\n'+document.documentElement.outerHTML;
+const EMBED_CFG=/*FBCFG*/{"apiKey": "AIzaSyCA4a2ArGeji6HlK5DvwRIH9HU8d7KCHOI", "authDomain": "tanal-toli.firebaseapp.com", "projectId": "tanal-toli", "storageBucket": "tanal-toli.firebasestorage.app", "messagingSenderId": "25911702487", "appId": "1:25911702487:web:e7b7aec9c268a794151192"}/*END*/;
+const K_CFG='pea_fb_cfg', K_OLD='pea_entries_v1', K_OLD_DONE='pea_old_imported';
+
+const RULES=`rules_version = '2';
+// Tanak Toli - કાયમી Rules (ભવિષ્યની નવી સુવિધાઓ માટે બદલવાની જરૂર નથી)
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function hasUser() { return exists(/databases/$(database)/documents/users/$(request.auth.uid)); }
+    function myUser() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data; }
+    function isActive() { return signedIn() && hasUser() && myUser().active == true; }
+    function isAdmin() { return isActive() && myUser().role == 'admin'; }
+
+    // પહેલો એડમિન કોણ છે તેની નોંધ
+    match /config/admin {
+      allow read: if true;
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && getAfter(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      allow update, delete: if false;
+    }
+
+    // એપનાં બીજાં સેટિંગ (ફક્ત એડમિન બદલી શકે)
+    match /config/{docId} {
+      allow read: if isActive();
+      allow write: if isAdmin() && docId != 'admin';
+    }
+
+    // યુઝર / કર્મચારી
+    match /users/{uid} {
+      allow read: if isAdmin() || (signedIn() && request.auth.uid == uid);
+      allow create: if isAdmin()
+        // નવો યુઝર પોતે વિનંતી બનાવે (મંજૂરી બાકી)
+        || (signedIn() && uid == request.auth.uid
+            && request.resource.data.role == 'staff'
+            && request.resource.data.active == false
+            && request.resource.data.status == 'pending'
+            && !request.resource.data.keys().hasAny(['approvedBy', 'approvedAt']))
+        // સૌથી પહેલો એડમિન
+        || (signedIn() && uid == request.auth.uid
+            && request.resource.data.role == 'admin'
+            && request.resource.data.active == true
+            && !exists(/databases/$(database)/documents/config/admin)
+            && getAfter(/databases/$(database)/documents/config/admin).data.uid == request.auth.uid);
+      // યુઝર પોતાની વિગત બદલી શકે, પણ રોલ/મંજૂરી નહીં
+      allow update: if isAdmin()
+        || (isActive() && uid == request.auth.uid
+            && !request.resource.data.diff(resource.data).affectedKeys()
+                 .hasAny(['role', 'active', 'status', 'approvedBy', 'approvedAt', 'email']));
+      allow delete: if isAdmin();
+    }
+
+    // બાકીનો બધો ડેટા: એન્ટ્રી અને ભવિષ્યમાં ઉમેરાય તે બધું
+    match /{coll}/{docId=**} {
+      allow read, create, update: if isActive() && !(coll in ['users', 'config']);
+      allow delete: if isAdmin() && !(coll in ['users', 'config']);
+    }
+  }
+}`;
+
+const $=id=>document.getElementById(id);
+function lsGet(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}}
+function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function lsDel(k){try{localStorage.removeItem(k)}catch(e){}}
+const norm=s=>(s||'').toString().trim().toLowerCase();
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2600)}
+function fmt(v){const n=ms(v);if(!n)return '';const d=new Date(n);return d.toLocaleDateString('en-GB')+' '+d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}
+function ms(v){if(!v)return 0;if(typeof v==='number')return v;if(typeof v.toMillis==='function')return v.toMillis();if(typeof v.seconds==='number')return v.seconds*1000;return 0}
+function mapUrl(loc){return 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(loc.trim())}
+function openM(id){$(id).classList.remove('hidden')}
+function closeM(id){$(id).classList.add('hidden')}
+function loading(on){$('loading').classList.toggle('hidden',!on)}
+function busyBtn(b,on){b.disabled=on}
+document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>closeM(b.dataset.close));
+document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)closeM(o.id)}));
+document.querySelectorAll('[data-eye]').forEach(b=>b.onclick=()=>{const i=$(b.dataset.eye);i.type=i.type==='password'?'text':'password'});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.overlay').forEach(o=>closeM(o.id))});
+
+function errMsg(e){
+  const c=(e&&e.code)||'';
+  const M={
+    'auth/invalid-credential':'ઇમેઇલ અથવા પાસવર્ડ ખોટો છે',
+    'auth/invalid-login-credentials':'ઇમેઇલ અથવા પાસવર્ડ ખોટો છે',
+    'auth/wrong-password':'પાસવર્ડ ખોટો છે',
+    'auth/user-not-found':'આ ઇમેઇલથી કોઈ એકાઉન્ટ નથી',
+    'auth/invalid-email':'ઇમેઇલ બરાબર લખો',
+    'auth/missing-email':'ઇમેઇલ લખો',
+    'auth/missing-password':'પાસવર્ડ લખો',
+    'auth/email-already-in-use':'આ ઇમેઇલથી એકાઉન્ટ પહેલેથી બનેલું છે',
+    'auth/weak-password':'પાસવર્ડ ઓછામાં ઓછા 6 અક્ષરનો રાખો',
+    'auth/too-many-requests':'ઘણા પ્રયત્નો થયા. થોડી વાર પછી ફરી પ્રયત્ન કરો',
+    'auth/network-request-failed':'ઇન્ટરનેટ ચાલુ નથી',
+    'auth/operation-not-allowed':'Firebase માં Email/Password લોગિન ચાલુ નથી (સેટઅપ સ્ટેપ 2)',
+    'auth/configuration-not-found':'Firebase માં Authentication ચાલુ નથી (સેટઅપ સ્ટેપ 2)',
+    'auth/requires-recent-login':'ફરી લોગિન કરી પ્રયત્ન કરો',
+    'auth/invalid-api-key':'Firebase config ખોટો છે',
+    'permission-denied':'પરવાનગી નથી. Firebase માં નવા Rules Publish કરેલા છે તે ચેક કરો',
+    'unavailable':'સર્વર સાથે જોડાણ થતું નથી. ઇન્ટરનેટ ચેક કરો',
+    'not-found':'Firestore Database બનાવેલ નથી (સેટઅપ સ્ટેપ 3)'
+  };
+  if(c.indexOf('auth/api-key')===0)return 'Firebase config ખોટો છે';
+  return M[c]||((e&&e.message)||'કંઈક ભૂલ થઈ');
+}
+
+/* ================= CONFIG ================= */
+function parseCfg(t){
+  t=(t||'').trim();let o=null;
+  try{o=JSON.parse(t)}catch(e){}
+  if(!o||typeof o!=='object'){
+    o={};const re=/(apiKey|authDomain|projectId|storageBucket|messagingSenderId|appId|measurementId|databaseURL)["']?\s*:\s*["']([^"']+)["']/g;let m;
+    while((m=re.exec(t)))o[m[1]]=m[2];
+  }
+  return (o.apiKey&&o.projectId&&o.appId)?o:null;
+}
+function hideScreens(){['cfgScreen','authScreen','appScreen'].forEach(s=>$(s).classList.add('hidden'))}
+function showCfg(){
+  loading(false);hideScreens();$('cfgScreen').classList.remove('hidden');$('rulesTxt').textContent=RULES;
+}
+$('copyRules').onclick=()=>copyText(RULES,'Rules કૉપી થયા ✔');
+$('copyRules2').onclick=()=>copyText(RULES,'Rules કૉપી થયા ✔ હવે Firebase → Firestore → Rules માં પેસ્ટ કરી Publish કરો');
+$('cfgSave').onclick=()=>{
+  const c=parseCfg($('cfgIn').value);
+  if(!c)return $('cfgErr').textContent='config બરાબર નથી. apiKey, projectId, appId વાળો આખો ભાગ પેસ્ટ કરો';
+  lsSet(K_CFG,c);location.reload();
+};
+function copyText(t,okMsg){
+  (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast(okMsg))
+    .catch(()=>{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();
+      try{document.execCommand('copy');toast(okMsg)}catch(e){prompt('કૉપી કરો:',t)}a.remove()});
+}
+
+/* ================= FIREBASE ================= */
+let cfg=EMBED_CFG||lsGet(K_CFG,null);
+let auth,db,me=null,entries=[],users=[],filter='all',editId=null,waId=null;
+let unsubEntries=null,unsubUsers=null,unsubMe=null,authBusy=false,pendingMsg='';
+const ts=()=>firebase.firestore.FieldValue.serverTimestamp();
+const col=()=>db.collection('entries');
+const isAdmin=()=>me&&me.role==='admin';
+
+function boot(){
+  if(typeof firebase==='undefined'){
+    loading(false);hideScreens();$('authScreen').classList.remove('hidden');showAuth('loginBox');
+    $('liErr').textContent='Firebase લોડ ન થયું. ઇન્ટરનેટ ચાલુ કરી પેજ ફરી ખોલો';return;
+  }
+  try{firebase.initializeApp(cfg)}catch(e){lsDel(K_CFG);return showCfg()}
+  auth=firebase.auth();db=firebase.firestore();
+  if(window.__EMU){auth.useEmulator('http://127.0.0.1:9099');db.useEmulator('127.0.0.1',8080)}
+  else db.enablePersistence({synchronizeTabs:true}).catch(()=>{});
+  auth.onAuthStateChanged(onAuth);
+}
+
+async function onAuth(u){
+  if(authBusy)return;
+  if(!u){me=null;stopAll();loading(false);showAuth('loginBox');checkAdminExists();return}
+  await loadMe(u);
+}
+
+async function loadMe(u){
+  loading(true);
+  const ref=db.collection('users').doc(u.uid);
+  let d=null;
+  try{d=await ref.get()}
+  catch(e){
+    if(e.code==='unavailable'){try{d=await ref.get({source:'cache'})}catch(e2){}}
+    if(!d){pendingMsg=errMsg(e);await auth.signOut();return}
+  }
+  if(!d.exists){
+    // Auth account exists but no request yet: create an approval request
+    try{
+      await ref.set({name:(u.email||'').split('@')[0],email:u.email||'',mobile:'',role:'staff',active:false,status:'pending',createdAt:ts()});
+      d=await ref.get();
+    }catch(e){pendingMsg=errMsg(e);await auth.signOut();return}
+  }
+  if(!handleUserDoc(u,d.data()))return;
+  if(unsubMe)unsubMe();
+  unsubMe=ref.onSnapshot(s=>{
+    if(!s.exists){pendingMsg='તમારું એકાઉન્ટ કાઢી નાખવામાં આવ્યું છે';auth.signOut();return}
+    handleUserDoc(u,s.data());
+  },()=>{});
+}
+
+// returns false if user was signed out
+function handleUserDoc(u,data){
+  if(data.active===true){
+    const inApp=!$('appScreen').classList.contains('hidden')&&me;
+    const wasAdmin=isAdmin();
+    me={uid:u.uid,email:u.email,...data};
+    if(!inApp){showApp();return true}
+    paintMe();
+    if(isAdmin()&&!wasAdmin)listenUsers();
+    if(!isAdmin()&&unsubUsers){unsubUsers();unsubUsers=null;users=[];paintReq()}
+    render();return true;
+  }
+  if(data.status==='pending'){
+    me=null;
+    if(unsubEntries){unsubEntries();unsubEntries=null}
+    if(unsubUsers){unsubUsers();unsubUsers=null}
+    entries=[];users=[];
+    loading(false);showAuth('pendingBox');
+    $('pendInfo').innerHTML='👤 '+esc(data.name||'')+'<br>✉ '+esc(data.email||u.email||'')+(data.mobile?'<br>📱 '+esc(data.mobile):'');
+    return true;
+  }
+  pendingMsg=data.status==='rejected'?'તમારી વિનંતી એડમિને નામંજૂર કરી છે. એડમિનનો સંપર્ક કરો':'તમારું એકાઉન્ટ બંધ કરેલ છે. એડમિનનો સંપર્ક કરો';
+  auth.signOut();return false;
+}
+
+function stopAll(){[unsubEntries,unsubUsers,unsubMe].forEach(f=>f&&f());unsubEntries=unsubUsers=unsubMe=null;entries=[];users=[];lastReqCount=-1}
+
+/* ---------- auth screens ---------- */
+function showAuth(which){
+  hideScreens();$('authScreen').classList.remove('hidden');
+  ['loginBox','resetBox','adminBox','signupBox','pendingBox'].forEach(b=>$(b).classList.toggle('hidden',b!==which));
+  document.querySelectorAll('#authScreen .err').forEach(e=>e.textContent='');
+  if(pendingMsg&&which==='loginBox'){$('liErr').textContent=pendingMsg;pendingMsg=''}
+  $('goCfg').classList.toggle('hidden',!!EMBED_CFG);
+}
+document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>showAuth(b.dataset.goto));
+$('goReset').onclick=()=>{showAuth('resetBox');$('rsUser').value=$('liUser').value};
+$('goSetup').onclick=()=>showAuth('adminBox');
+$('goSignup').onclick=()=>{showAuth('signupBox');$('sgEmail').value=$('liUser').value};
+$('sgMobile').addEventListener('input',e=>e.target.value=e.target.value.replace(/\D/g,'').slice(0,10));
+$('pendLogout').onclick=()=>auth.signOut();
+$('sgBtn').onclick=async()=>{
+  const e=$('sgErr'),name=$('sgName').value.trim(),mobile=$('sgMobile').value.trim(),email=$('sgEmail').value.trim(),p=$('sgPass').value,p2=$('sgPass2').value;
+  if(!name)return e.textContent='પૂરું નામ લખો';
+  if(mobile&&mobile.length!==10)return e.textContent='મોબાઇલ નંબર 10 અંકનો હોવો જોઈએ';
+  if(!email)return e.textContent='ઇમેઇલ લખો';
+  if(p.length<6)return e.textContent='પાસવર્ડ ઓછામાં ઓછા 6 અક્ષરનો રાખો';
+  if(p!==p2)return e.textContent='બંને પાસવર્ડ સરખા નથી';
+  const b=$('sgBtn');busyBtn(b,true);e.textContent='';authBusy=true;
+  let cred=null;
+  try{
+    cred=await auth.createUserWithEmailAndPassword(email,p);
+    await db.collection('users').doc(cred.user.uid).set({name,email:cred.user.email,mobile,role:'staff',active:false,status:'pending',createdAt:ts()});
+    authBusy=false;busyBtn(b,false);
+    ['sgPass','sgPass2'].forEach(i=>$(i).value='');
+    await loadMe(cred.user);
+  }catch(err){
+    if(cred){try{await cred.user.delete()}catch(x){try{await auth.signOut()}catch(y){}}}
+    authBusy=false;busyBtn(b,false);
+    e.textContent=err.code==='permission-denied'?'પરવાનગી નથી. એડમિનને કહો કે નવા Firestore Rules Publish કરે':errMsg(err);
+  }
+};
+$('goCfg').onclick=()=>{if(confirm('Firebase સેટિંગ ફરીથી નાખવું છે?')){lsDel(K_CFG);location.reload()}};
+
+function checkAdminExists(){
+  db.collection('config').doc('admin').get()
+    .then(d=>$('goSetup').classList.toggle('hidden',d.exists))
+    .catch(()=>$('goSetup').classList.remove('hidden'));
+}
+
+async function doLogin(){
+  const e=$('liErr'),email=$('liUser').value.trim(),p=$('liPass').value;
+  if(!email||!p)return e.textContent='ઇમેઇલ અને પાસવર્ડ બંને લખો';
+  const b=$('liBtn');busyBtn(b,true);e.textContent='';
+  try{await auth.signInWithEmailAndPassword(email,p);$('liPass').value=''}
+  catch(err){e.textContent=errMsg(err)}
+  busyBtn(b,false);
+}
+$('liBtn').onclick=doLogin;
+$('liPass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
+
+$('rsBtn').onclick=async()=>{
+  const e=$('rsErr'),email=$('rsUser').value.trim();
+  if(!email)return e.textContent='ઇમેઇલ લખો';
+  const b=$('rsBtn');busyBtn(b,true);
+  try{
+    auth.languageCode='gu';
+    await auth.sendPasswordResetEmail(email);
+    showAuth('loginBox');$('liUser').value=email;
+    toast('રી-સેટ લિંક ઇમેઇલમાં મોકલી છે. Spam ફોલ્ડર પણ ચેક કરજો');
+  }catch(err){e.textContent=errMsg(err)}
+  busyBtn(b,false);
+};
+
+$('adBtn').onclick=async()=>{
+  const e=$('adErr'),name=$('adName').value.trim(),email=$('adEmail').value.trim(),p=$('adPass').value,p2=$('adPass2').value;
+  if(!name)return e.textContent='નામ લખો';
+  if(!email)return e.textContent='ઇમેઇલ લખો';
+  if(p.length<6)return e.textContent='પાસવર્ડ ઓછામાં ઓછા 6 અક્ષરનો રાખો';
+  if(p!==p2)return e.textContent='બંને પાસવર્ડ સરખા નથી';
+  const b=$('adBtn');busyBtn(b,true);e.textContent='';authBusy=true;
+  let cred=null;
+  try{
+    cred=await auth.createUserWithEmailAndPassword(email,p);
+    const uid=cred.user.uid,batch=db.batch();
+    batch.set(db.collection('users').doc(uid),{name,email,role:'admin',active:true,createdAt:ts()});
+    batch.set(db.collection('config').doc('admin'),{uid,createdAt:ts()});
+    await batch.commit();
+    authBusy=false;busyBtn(b,false);
+    toast('એડમિન એકાઉન્ટ બની ગયું ✔');
+    await loadMe(cred.user);
+  }catch(err){
+    if(cred){try{await cred.user.delete()}catch(x){try{await auth.signOut()}catch(y){}}}
+    authBusy=false;busyBtn(b,false);
+    e.textContent=err.code==='permission-denied'?'એડમિન પહેલેથી બનેલો છે, અથવા Firestore Rules મૂકેલા નથી (સેટઅપ સ્ટેપ 4)':errMsg(err);
+  }
+};
+
+$('logoutBtn').onclick=()=>{if(confirm('લોગઆઉટ કરવું છે?'))auth.signOut().then(()=>toast('લોગઆઉટ થઇ ગયા'))};
+
+/* ================= APP ================= */
+function paintMe(){
+  $('whoami').textContent='👤 '+(me.name||me.email)+(isAdmin()?' · એડમિન':'');
+  document.querySelectorAll('.admin-only').forEach(el=>el.classList.toggle('hidden',!isAdmin()));
+  const old=lsGet(K_OLD,[]);
+  $('oldImpBtn').classList.toggle('hidden',!(isAdmin()&&Array.isArray(old)&&old.length&&!lsGet(K_OLD_DONE,false)));
+  $('resetCfgBtn').classList.toggle('hidden',!!EMBED_CFG);
+}
+function showApp(){
+  loading(false);hideScreens();$('appScreen').classList.remove('hidden');
+  paintMe();paintNet();
+  if(unsubEntries)unsubEntries();
+  unsubEntries=col().orderBy('createdAt','desc').onSnapshot({includeMetadataChanges:true},snap=>{
+    entries=snap.docs.map(d=>({id:d.id,...d.data({serverTimestamps:'estimate'}),_pending:d.metadata.hasPendingWrites}));
+    render();
+  },err=>toast(errMsg(err)));
+  if(isAdmin())listenUsers();
+}
+function paintNet(){
+  const on=navigator.onLine;$('net').classList.toggle('off',!on);
+  $('net').lastElementChild.textContent=on?'ઓનલાઇન':'ઓફલાઇન · નેટ આવતાં સિંક થશે';
+}
+window.addEventListener('online',paintNet);window.addEventListener('offline',paintNet);
+
+function render(){
+  const q=norm($('q').value);
+  const done=entries.filter(x=>x.done).length;
+  $('stAll').textContent=entries.length;$('stDone').textContent=done;$('stPend').textContent=entries.length-done;
+  document.querySelectorAll('.stat').forEach(s=>s.classList.toggle('active',s.dataset.f===filter));
+  let arr=entries.slice().sort((a,b)=>((a.done?1:0)-(b.done?1:0))||(ms(b.createdAt)-ms(a.createdAt)));
+  if(filter==='done')arr=arr.filter(x=>x.done);
+  if(filter==='pending')arr=arr.filter(x=>!x.done);
+  if(q)arr=arr.filter(x=>[x.name,x.mobile,x.station,x.location,x.details,x.createdBy].some(v=>norm(v).includes(q)));
+  $('list').innerHTML=arr.map(card).join('');
+  $('empty').classList.toggle('hidden',arr.length>0);
+  $('emptyTxt').textContent=entries.length?'શોધ મુજબ કોઈ એન્ટ્રી મળી નહીં.':'હજુ કોઈ એન્ટ્રી નથી. ＋ બટન દબાવી પહેલી એન્ટ્રી ઉમેરો.';
+  const st=[...new Set(entries.map(x=>x.station).filter(Boolean))];
+  $('stationList').innerHTML=st.map(s=>`<option value="${esc(s)}">`).join('');
+}
+
+const IC={
+  ph:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3.1 19.5 19.5 0 01-6-6A19.8 19.8 0 012.1 4.2 2 2 0 014.1 2h3a2 2 0 012 1.7c.1 1 .4 1.9.7 2.8a2 2 0 01-.5 2.1L8 9.9a16 16 0 006 6l1.3-1.3a2 2 0 012.1-.4c.9.3 1.8.6 2.8.7a2 2 0 011.7 2z"/></svg>',
+  ps:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 3v6c0 5-3.5 9.5-8 11-4.5-1.5-8-6-8-11V5l8-3z"/></svg>',
+  lo:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'
+};
+function card(x){
+  const wa=x.wa==='yes'?'<span class="wa-b wa-yes">✔ WhatsApp</span>':x.wa==='no'?'<span class="wa-b wa-no">✖ WhatsApp નથી</span>':'<span class="wa-b wa-unk">WhatsApp ?</span>';
+  const edited=x.updatedBy&&ms(x.updatedAt)-ms(x.createdAt)>2000?`<br>✏ સુધારો: ${esc(x.updatedBy)} · ${fmt(x.updatedAt)}`:'';
+  return `<div class="entry ${x.done?'done':''}">
+    <div class="e-top">
+      <button class="tick" data-tick="${x.id}" title="ટીક માર્ક"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><path d="M5 12l5 5L20 7"/></svg></button>
+      <div style="flex:1;min-width:0">
+        <div class="e-name">${esc(x.name)}</div>
+        <span class="badge ${x.done?'b-ok':'b-pend'}">${x.done?'✔ પૂર્ણ'+(x.doneBy?' · '+esc(x.doneBy):''):'⏳ બાકી'}</span>${x._pending?'<span class="badge b-sync">☁ સિંક બાકી</span>':''}
+      </div>
+      <div class="e-act">
+        <button class="act-btn" data-edit="${x.id}" title="સુધારો">✏️</button>
+        ${isAdmin()?`<button class="act-btn del" data-del="${x.id}" title="ડિલીટ">🗑</button>`:''}
+      </div>
+    </div>
+    ${x.mobile?`<div class="e-row">${IC.ph}<button class="mob-btn" data-wa="${x.id}" title="WhatsApp વિકલ્પ">${esc(x.mobile)}</button>${wa}</div>`:''}
+    ${x.station?`<div class="e-row">${IC.ps}<span>${esc(x.station)}</span></div>`:''}
+    ${x.location?`<div class="e-row">${IC.lo}<a class="maplink" href="${mapUrl(x.location)}" target="_blank" rel="noopener" title="ગુગલ મેપમાં જુઓ">${esc(x.location)} ↗</a></div>`:''}
+    ${x.details?`<div class="e-det">${esc(x.details)}</div>`:''}
+    <div class="e-foot">
+      <span class="e-date">🕒 ${fmt(x.createdAt)}${x.createdBy?' · ✍ '+esc(x.createdBy):''}${edited}</span>
+    </div>
+  </div>`;
+}
+
+$('list').addEventListener('click',e=>{
+  const t=e.target.closest('[data-tick],[data-edit],[data-del],[data-wa]');if(!t)return;
+  if(t.dataset.wa)return openWa(t.dataset.wa);
+  if(t.dataset.edit)return openEntry(t.dataset.edit);
+  if(t.dataset.tick){
+    const x=entries.find(v=>v.id===t.dataset.tick);if(!x)return;const nd=!x.done;
+    col().doc(x.id).update({done:nd,doneBy:nd?me.name:null,doneAt:nd?ts():null,updatedAt:ts(),updatedBy:me.name}).catch(err=>toast(errMsg(err)));
+    toast(nd?'✔ ટીક માર્ક થયું':'ટીક માર્ક હટાવ્યું');
+  }
+  if(t.dataset.del){
+    const x=entries.find(v=>v.id===t.dataset.del);if(!x)return;
+    if(confirm(`"${x.name}" ની એન્ટ્રી ડિલીટ કરવી છે? (બધા માટે ડિલીટ થશે)`)){col().doc(x.id).delete().catch(err=>toast(errMsg(err)));toast('એન્ટ્રી ડિલીટ થઇ')}
+  }
+});
+document.querySelectorAll('.stat').forEach(s=>s.onclick=()=>{filter=s.dataset.f;render()});
+$('q').addEventListener('input',render);
+
+function openEntry(id){
+  editId=id||null;const x=id?entries.find(v=>v.id===id):{};if(!x)return;
+  $('mTitle').textContent=id?'એન્ટ્રીમાં સુધારો':'નવી એન્ટ્રી';
+  $('fName').value=x.name||'';$('fMobile').value=x.mobile||'';$('fStation').value=x.station||'';
+  $('fLoc').value=x.location||'';$('fDet').value=x.details||'';$('fDone').checked=!!x.done;$('fErr').textContent='';
+  openM('entryModal');setTimeout(()=>$('fName').focus(),100);
+}
+$('addBtn').onclick=()=>openEntry();$('addBtn2').onclick=()=>openEntry();
+$('fMobile').addEventListener('input',e=>e.target.value=e.target.value.replace(/\D/g,'').slice(0,10));
+
+$('saveBtn').onclick=()=>{
+  const d={name:$('fName').value.trim(),mobile:$('fMobile').value.trim(),station:$('fStation').value.trim(),
+    location:$('fLoc').value.trim(),details:$('fDet').value.trim(),done:$('fDone').checked};
+  if(!d.name)return $('fErr').textContent='નામ લખવું જરૂરી છે';
+  if(d.mobile&&d.mobile.length!==10)return $('fErr').textContent='મોબાઇલ નંબર 10 અંકનો હોવો જોઈએ';
+  const meta={updatedAt:ts(),updatedBy:me.name};
+  if(editId){
+    const old=entries.find(v=>v.id===editId)||{};
+    if(d.done!==!!old.done){meta.doneBy=d.done?me.name:null;meta.doneAt=d.done?ts():null}
+    col().doc(editId).update({...d,...meta}).catch(err=>toast(errMsg(err)));
+    toast('સુધારો સેવ થયો ✔');
+  }else{
+    col().add({...d,...meta,wa:null,doneBy:d.done?me.name:null,createdAt:ts(),createdBy:me.name,createdByUid:me.uid}).catch(err=>toast(errMsg(err)));
+    toast('એન્ટ્રી ઉમેરાઈ ✔');
+  }
+  closeM('entryModal');
+};
+
+$('gpsBtn').onclick=()=>{
+  if(!navigator.geolocation)return toast('આ ડિવાઇસમાં GPS સપોર્ટ નથી');
+  $('gpsBtn').textContent='⏳...';
+  navigator.geolocation.getCurrentPosition(p=>{
+    $('fLoc').value=p.coords.latitude.toFixed(6)+','+p.coords.longitude.toFixed(6);
+    $('gpsBtn').textContent='📍 GPS';toast('લોકેશન મળી ગયું ✔');
+  },()=>{$('gpsBtn').textContent='📍 GPS';toast('લોકેશન મળ્યું નહીં. પરમિશન ચેક કરો')},{enableHighAccuracy:true,timeout:15000});
+};
+
+/* ---------- WhatsApp ---------- */
+const isAndroid=/android/i.test(navigator.userAgent);
+function waPhone(m){m=(m||'').replace(/\D/g,'');return m.length===10?'91'+m:m}
+function paintWaStatus(){
+  const x=entries.find(v=>v.id===waId);if(!x)return;
+  document.querySelectorAll('[data-was]').forEach(b=>{
+    b.classList.toggle('on-yes',b.dataset.was==='yes'&&x.wa==='yes');
+    b.classList.toggle('on-no',b.dataset.was==='no'&&x.wa==='no');
+  });
+}
+function openWa(id){
+  waId=id;const x=entries.find(v=>v.id===id);if(!x)return;
+  $('waNum').textContent='+91 '+x.mobile;$('waName').textContent=x.name;
+  $('waTel').href='tel:+91'+x.mobile;
+  $('waAndroid').classList.toggle('hidden',!isAndroid);
+  paintWaStatus();openM('waModal');
+}
+document.querySelectorAll('[data-app]').forEach(b=>b.onclick=()=>{
+  const x=entries.find(v=>v.id===waId);if(!x)return;const p=waPhone(x.mobile),app=b.dataset.app;
+  if(app==='ask'){window.location.href='https://wa.me/'+p;return}
+  const pkg=app==='w4b'?'com.whatsapp.w4b':'com.whatsapp';
+  window.location.href='intent://send/?phone='+p+'#Intent;scheme=whatsapp;package='+pkg+
+    ';S.browser_fallback_url='+encodeURIComponent('https://play.google.com/store/apps/details?id='+pkg)+';end';
+});
+document.querySelectorAll('[data-was]').forEach(b=>b.onclick=()=>{
+  const x=entries.find(v=>v.id===waId);if(!x)return;const v=b.dataset.was||null;
+  x.wa=v;paintWaStatus();
+  col().doc(x.id).update({wa:v,updatedAt:ts(),updatedBy:me.name}).catch(err=>toast(errMsg(err)));
+  toast('નોંધ થઇ ગઇ ✔');
+});
+$('waCopy').onclick=()=>{const x=entries.find(v=>v.id===waId);if(x)copyText(x.mobile,'નંબર કૉપી થયો ✔')};
+
+/* ================= SETTINGS ================= */
+$('setBtn').onclick=()=>{
+  ['cpOld','cpNew','cpNew2','euName','euEmail','euPass'].forEach(i=>$(i).value='');
+  $('cpErr').textContent='';$('euErr').textContent='';$('myName').value=me.name||'';
+  paintMe();renderUsers();openM('setModal');
+};
+$('myNameBtn').onclick=()=>{
+  const n=$('myName').value.trim();if(!n)return toast('નામ લખો');
+  db.collection('users').doc(me.uid).update({name:n}).then(()=>toast('નામ સેવ થયું ✔')).catch(err=>toast(errMsg(err)));
+  me.name=n;paintMe();
+};
+$('cpBtn').onclick=async()=>{
+  const e=$('cpErr'),o=$('cpOld').value,n=$('cpNew').value,n2=$('cpNew2').value;
+  if(!o)return e.textContent='હાલનો પાસવર્ડ લખો';
+  if(n.length<6)return e.textContent='નવો પાસવર્ડ ઓછામાં ઓછા 6 અક્ષરનો રાખો';
+  if(n!==n2)return e.textContent='બંને નવા પાસવર્ડ સરખા નથી';
+  const b=$('cpBtn');busyBtn(b,true);e.textContent='';
+  try{
+    const u=auth.currentUser;
+    await u.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(u.email,o));
+    await u.updatePassword(n);
+    ['cpOld','cpNew','cpNew2'].forEach(i=>$(i).value='');toast('પાસવર્ડ બદલાઈ ગયો ✔');
+  }catch(err){e.textContent=(err.code==='auth/invalid-credential'||err.code==='auth/wrong-password')?'હાલનો પાસવર્ડ ખોટો છે':errMsg(err)}
+  busyBtn(b,false);
+};
+
+/* ---------- employees (admin) ---------- */
+function listenUsers(){
+  if(unsubUsers)return;
+  unsubUsers=db.collection('users').onSnapshot(s=>{
+    users=s.docs.map(d=>({uid:d.id,...d.data()})).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+    renderUsers();
+  },()=>{});
+}
+let lastReqCount=-1;
+function paintReq(){
+  const req=isAdmin()?users.filter(u=>u.status==='pending'):[];
+  const n=req.length;
+  $('reqBanner').classList.toggle('hidden',!n);
+  $('reqBanner').textContent='🔔 '+n+' નવી વિનંતી મંજૂરી માટે બાકી છે — જોવા અહીં દબાવો';
+  let dot=$('setBtn').querySelector('.dot-badge');
+  if(n){if(!dot){dot=document.createElement('span');dot.className='dot-badge';$('setBtn').appendChild(dot)}dot.textContent=n}
+  else if(dot)dot.remove();
+  if(lastReqCount>=0&&n>lastReqCount)toast('🔔 નવી વિનંતી આવી: '+(req[req.length-1].name||''));
+  lastReqCount=isAdmin()?n:-1;
+  $('reqWrap').classList.toggle('hidden',!n);
+  $('reqList').innerHTML=req.map(u=>`<div class="req-row">
+      <div class="u-info"><b>${esc(u.name||'')}</b><small>${esc(u.email||'')}${u.mobile?' · 📱 '+esc(u.mobile):''}${u.createdAt?'<br>🕒 '+fmt(u.createdAt):''}</small></div>
+      <div class="u-btns">
+        <button class="btn btn-ok" data-ua="approve" data-uid="${u.uid}">✔ મંજૂર</button>
+        <button class="btn btn-danger" data-ua="reject" data-uid="${u.uid}">✖ નામંજૂર</button>
+      </div></div>`).join('');
+}
+$('reqBanner').onclick=()=>$('setBtn').click();
+$('reqList').addEventListener('click',e=>userAction(e));
+function renderUsers(){
+  if(!isAdmin())return;
+  paintReq();
+  $('userList').innerHTML=users.filter(u=>u.status!=='pending').map(u=>{
+    const self=u.uid===me.uid;
+    return `<div class="u-row ${u.active?'':'u-off'}">
+      <div class="u-info"><b>${esc(u.name||'')}<span class="role ${u.role==='admin'?'r-admin':'r-staff'}">${u.role==='admin'?'એડમિન':'સ્ટાફ'}</span>${u.active?'':' <span class="role wa-no">'+(u.status==='rejected'?'નામંજૂર':'બંધ')+'</span>'}${self?' <span class="role r-staff">તમે</span>':''}</b><small>${esc(u.email||'')}${u.mobile?' · 📱 '+esc(u.mobile):''}</small></div>
+      <div class="u-btns">
+        <button class="btn btn-light" data-ua="reset" data-uid="${u.uid}">🔑 રી-સેટ ઇમેઇલ</button>
+        ${self?'':`<button class="btn btn-light" data-ua="role" data-uid="${u.uid}">${u.role==='admin'?'સ્ટાફ બનાવો':'એડમિન બનાવો'}</button>
+        <button class="btn ${u.active?'btn-danger':'btn-light'}" data-ua="active" data-uid="${u.uid}">${u.active?'બંધ કરો':'ચાલુ કરો'}</button>`}
+      </div></div>`;
+  }).join('')||'<div class="hint">હજુ કોઈ કર્મચારી નથી.</div>';
+}
+$('userList').addEventListener('click',e=>userAction(e));
+function userAction(e){
+  const b=e.target.closest('[data-ua]');if(!b)return;
+  const u=users.find(v=>v.uid===b.dataset.uid);if(!u)return;
+  const ref=db.collection('users').doc(u.uid);
+  if(b.dataset.ua==='approve'){
+    ref.update({active:true,status:'approved',approvedBy:me.name,approvedAt:ts()}).then(()=>toast(u.name+' ને મંજૂરી આપી ✔ હવે તેમની એપ ખૂલી જશે')).catch(err=>toast(errMsg(err)));
+  }
+  if(b.dataset.ua==='reject'){
+    if(confirm(u.name+' ની વિનંતી નામંજૂર કરવી છે?'))ref.update({active:false,status:'rejected'}).then(()=>toast('વિનંતી નામંજૂર કરી')).catch(err=>toast(errMsg(err)));
+  }
+  if(b.dataset.ua==='reset'){
+    auth.languageCode='gu';
+    auth.sendPasswordResetEmail(u.email).then(()=>toast(u.name+' ને રી-સેટ લિંક ઇમેઇલમાં મોકલી ✔')).catch(err=>toast(errMsg(err)));
+  }
+  if(b.dataset.ua==='role'){
+    const nr=u.role==='admin'?'staff':'admin';
+    if(confirm(`${u.name} ને ${nr==='admin'?'એડમિન':'સ્ટાફ'} બનાવવા છે?`))ref.update({role:nr}).then(()=>toast('રોલ બદલાયો ✔')).catch(err=>toast(errMsg(err)));
+  }
+  if(b.dataset.ua==='active'){
+    if(confirm(`${u.name} નું એકાઉન્ટ ${u.active?'બંધ':'ચાલુ'} કરવું છે?`))ref.update({active:!u.active,status:u.active?'blocked':'approved'}).then(()=>toast(u.active?'એકાઉન્ટ બંધ કર્યું':'એકાઉન્ટ ચાલુ કર્યું ✔')).catch(err=>toast(errMsg(err)));
+  }
+}
+$('euBtn').onclick=async()=>{
+  const e=$('euErr'),name=$('euName').value.trim(),email=$('euEmail').value.trim(),p=$('euPass').value,role=$('euRole').value;
+  if(!name)return e.textContent='કર્મચારીનું નામ લખો';
+  if(!email)return e.textContent='ઇમેઇલ લખો';
+  if(p.length<6)return e.textContent='પાસવર્ડ ઓછામાં ઓછા 6 અક્ષરનો રાખો';
+  const b=$('euBtn');busyBtn(b,true);e.textContent='';
+  let sec=firebase.apps.find(a=>a.name==='secondary');
+  if(!sec){sec=firebase.initializeApp(cfg,'secondary');if(window.__EMU)sec.auth().useEmulator('http://127.0.0.1:9099')}
+  try{
+    await sec.auth().setPersistence(firebase.auth.Auth.Persistence.NONE);
+    const cred=await sec.auth().createUserWithEmailAndPassword(email,p);
+    await db.collection('users').doc(cred.user.uid).set({name,email:cred.user.email,role,active:true,createdAt:ts(),createdBy:me.name});
+    await sec.auth().signOut();
+    ['euName','euEmail','euPass'].forEach(i=>$(i).value='');$('euRole').value='staff';
+    toast(name+' ઉમેરાયા ✔ હવે તે લોગિન કરી શકશે');
+  }catch(err){
+    try{await sec.auth().signOut()}catch(x){}
+    e.textContent=err.code==='auth/email-already-in-use'?'આ ઇમેઇલથી એકાઉન્ટ પહેલેથી છે. યાદીમાં ન દેખાય તો Firebase Console → Authentication માંથી તે યુઝર ડિલીટ કરી ફરી ઉમેરો':errMsg(err);
+  }
+  busyBtn(b,false);
+};
+
+/* ---------- data ---------- */
+function download(name,content,type){
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=name;
+  document.body.appendChild(a);a.click();a.remove();
+}
+const today=()=>new Date().toISOString().slice(0,10);
+$('csvBtn').onclick=()=>{
+  if(!entries.length)return toast('કોઈ એન્ટ્રી નથી');
+  const h=['ક્રમ','નામ','મોબાઇલ નંબર','પોલીસ સ્ટેશન','લોકેશન','ગુગલ મેપ લિંક','વિગત','ટીક માર્ક','ટીક કરનાર','WhatsApp','તારીખ','એન્ટ્રી કરનાર'];
+  const c=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+  const rows=entries.map((x,i)=>[i+1,x.name,x.mobile,x.station,x.location,x.location?mapUrl(x.location):'',x.details,x.done?'✔ હા':'બાકી',x.doneBy||'',x.wa==='yes'?'છે':x.wa==='no'?'નથી':'',fmt(x.createdAt),x.createdBy||''].map(c).join(','));
+  download('entries_'+today()+'.csv','﻿'+[h.map(c).join(','),...rows].join('\r\n'),'text/csv;charset=utf-8');
+};
+$('bkBtn').onclick=()=>{
+  const out=entries.map(x=>({name:x.name,mobile:x.mobile,station:x.station,location:x.location,details:x.details,done:!!x.done,doneBy:x.doneBy||null,wa:x.wa||null,created:ms(x.createdAt),createdBy:x.createdBy||''}));
+  download('backup_'+today()+'.json',JSON.stringify({app:'pea',entries:out},null,1),'application/json');
+};
+async function importEntries(arr){
+  const T=firebase.firestore.Timestamp;let n=0;arr=arr.filter(x=>x&&x.name);
+  for(let i=0;i<arr.length;i+=400){
+    const b=db.batch();
+    arr.slice(i,i+400).forEach(x=>{
+      const cAt=T.fromMillis(ms(x.created)||ms(x.createdAt)||Date.now());
+      b.set(col().doc(),{name:String(x.name),mobile:String(x.mobile||''),station:String(x.station||''),location:String(x.location||''),
+        details:String(x.details||''),done:!!x.done,doneBy:x.doneBy||(x.done?me.name:null),wa:(x.wa==='yes'||x.wa==='no')?x.wa:null,
+        createdAt:cAt,createdBy:x.createdBy||me.name,createdByUid:me.uid,
+        updatedAt:cAt,updatedBy:x.createdBy||me.name});
+      n++;
+    });
+    await b.commit();
+  }
+  return n;
+}
+$('rsBkBtn').onclick=()=>$('bkFile').click();
+$('bkFile').onchange=e=>{
+  const f=e.target.files[0];if(!f)return;const r=new FileReader();
+  r.onload=async()=>{
+    e.target.value='';
+    let d;try{d=JSON.parse(r.result);if(!Array.isArray(d.entries))throw 0}catch(err){return toast('ખોટી બેકઅપ ફાઇલ')}
+    if(!confirm(d.entries.length+' એન્ટ્રી ઉમેરવી છે? (હાલની એન્ટ્રી રહેશે, આ નવી ઉમેરાશે)'))return;
+    loading(true);
+    try{const n=await importEntries(d.entries);toast(n+' એન્ટ્રી ઉમેરાઈ ✔');closeM('setModal')}catch(err){toast(errMsg(err))}
+    loading(false);
+  };
+  r.readAsText(f);
+};
+$('oldImpBtn').onclick=async()=>{
+  const old=lsGet(K_OLD,[]);
+  if(!confirm('આ ફોનની જૂની એપમાં '+old.length+' એન્ટ્રી છે. તે ઓનલાઇન ડેટામાં ઉમેરવી છે?'))return;
+  loading(true);
+  try{const n=await importEntries(old);lsSet(K_OLD_DONE,true);paintMe();toast(n+' જૂની એન્ટ્રી ઉમેરાઈ ✔');closeM('setModal')}catch(err){toast(errMsg(err))}
+  loading(false);
+};
+$('clearDoneBtn').onclick=async()=>{
+  const list=entries.filter(x=>x.done);if(!list.length)return toast('ટીક થયેલ એન્ટ્રી નથી');
+  if(!confirm(list.length+' ટીક થયેલ એન્ટ્રી બધા માટે કાયમ ડિલીટ થશે. આગળ વધવું છે?'))return;
+  loading(true);
+  try{
+    for(let i=0;i<list.length;i+=400){const b=db.batch();list.slice(i,i+400).forEach(x=>b.delete(col().doc(x.id)));await b.commit()}
+    toast('ડિલીટ થઇ');
+  }catch(err){toast(errMsg(err))}
+  loading(false);
+};
+$('dlCfgBtn').onclick=()=>{
+  const re=new RegExp('/\\*FB'+'CFG\\*/[\\s\\S]*?/\\*E'+'ND\\*/');
+  const html=ORIGINAL_HTML.replace(re,'/*FB'+'CFG*/'+JSON.stringify(cfg)+'/*E'+'ND*/');
+  download('tanak-toli.html',html,'text/html;charset=utf-8');
+  toast('ફાઇલ ડાઉનલોડ થઈ ✔ આ જ ફાઇલ બધાને આપો');
+};
+$('resetCfgBtn').onclick=()=>{
+  if(confirm('Firebase સેટિંગ કાઢી ફરીથી નાખવું છે? (ડેટા Firebase માં સલામત રહેશે)')){lsDel(K_CFG);auth.signOut().finally(()=>location.reload())}
+};
+
+/* ================= ZOOM ================= */
+const K_ZOOM='pea_zoom';
+let zoom=lsGet(K_ZOOM,100);
+function applyZoom(){
+  zoom=Math.max(70,Math.min(160,Math.round(zoom/10)*10));
+  document.documentElement.style.zoom=(zoom/100);
+  $('zVal').textContent=zoom+'%';
+  $('zOut').disabled=zoom<=70;$('zIn').disabled=zoom>=160;
+  lsSet(K_ZOOM,zoom);
+}
+$('zIn').onclick=()=>{zoom+=10;applyZoom()};
+$('zOut').onclick=()=>{zoom-=10;applyZoom()};
+$('zVal').onclick=()=>{zoom=100;applyZoom();toast('સામાન્ય સાઇઝ (100%)')};
+applyZoom();
+
+/* ================= START ================= */
+if(!cfg)showCfg();else boot();
+})();
+</script>
+</body>
+</html>
