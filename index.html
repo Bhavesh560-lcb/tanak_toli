@@ -243,7 +243,7 @@ html,body{overflow-x:hidden}
 .composer textarea{flex:1;resize:none;border:1.5px solid var(--line);border-radius:20px;padding:10px 14px;max-height:120px;outline:none;font-size:15px;min-width:0}
 .composer textarea:focus{border-color:var(--pri)}
 .composer button{width:44px;height:44px;border-radius:50%;border:none;cursor:pointer;flex:none;font-size:18px}
-#sendBtn{background:var(--pri);color:#fff}#sendLoc{background:var(--soft)}
+#sendBtn{background:var(--pri);color:#fff}#attBtn{background:var(--soft);font-size:20px}
 @media(max-width:430px){.brand-h .bt{display:none}.icon-btn{width:38px;height:38px}.head-in{gap:7px}}
 .inst-banner{display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,var(--tint),var(--tint2));border:1.5px solid var(--tint3);border-radius:14px;padding:10px 12px;margin-bottom:12px;text-align:left}
 .inst-banner img{width:40px;height:40px;border-radius:10px;flex:none}
@@ -315,6 +315,34 @@ html,body{overflow-x:hidden}
 @media(max-width:400px){.h-logo{width:46px;height:46px}.h-name{font-size:20px}}
 .h-sub .net{font-size:8.5px;line-height:1.5;padding:0 6px;gap:4px}.h-sub .net i{width:6px;height:6px}
 .h-sub{gap:4px}
+
+/* ---------- chat attachments ---------- */
+.conv{position:relative}
+.att-menu{position:absolute;left:10px;bottom:66px;z-index:5;background:var(--card);border-radius:16px;box-shadow:0 12px 34px rgba(0,0,0,.25);padding:6px;display:flex;flex-direction:column;min-width:210px;border:1px solid var(--line)}
+.att-menu button{display:flex;align-items:center;gap:12px;border:none;background:none;padding:10px 12px;border-radius:10px;font-size:15px;font-weight:600;color:var(--ink);cursor:pointer;text-align:left}
+.att-menu button:active{background:var(--soft)}
+.att-menu span{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;color:#fff;flex:none}
+.m-photo{display:block;width:230px;max-width:100%;height:auto;border-radius:10px;cursor:pointer;background:var(--soft);object-fit:cover}
+.m-file{display:flex;align-items:center;gap:10px;background:var(--soft);border:none;border-radius:10px;padding:9px 11px;cursor:pointer;text-align:left;color:var(--ink);max-width:260px}
+.mf-ic{font-size:26px;flex:none}.mf-t{min-width:0}.mf-t b{display:block;font-size:13.5px;word-break:break-all}.mf-t small{color:var(--muted);font-size:11.5px}
+.m-ct,.m-file{white-space:normal}
+.m-ct{min-width:220px}
+.mc-b a,.mc-b button{white-space:nowrap}
+.mc-h{display:flex;align-items:center;gap:10px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.mc-av{width:40px;height:40px;border-radius:50%;background:var(--tint2);display:flex;align-items:center;justify-content:center;font-size:20px;flex:none}
+.mc-h b{display:block;font-size:15px}.mc-h small{color:var(--muted);font-size:13px}
+.mc-b{display:flex;gap:4px;padding-top:6px}
+.mc-b a,.mc-b button{flex:1;text-align:center;font-size:12.5px;font-weight:700;color:var(--pri);text-decoration:none;background:none;border:none;padding:6px 2px;border-radius:8px;cursor:pointer}
+.mc-b a:active,.mc-b button:active{background:var(--soft)}
+.ct-list{max-height:240px;overflow:auto;border:1px solid var(--line);border-radius:12px}
+.ct-row{padding:9px 12px;border-bottom:1px solid var(--line2);cursor:pointer}.ct-row:last-child{border-bottom:none}
+.ct-row b{display:block;font-size:14px}.ct-row small{color:var(--muted);font-size:12px}
+.ct-row:active{background:var(--soft)}
+#ctModal{z-index:80}
+#photoView{position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.94);display:flex;align-items:center;justify-content:center}
+#photoView img{max-width:100%;max-height:100%;object-fit:contain}
+.pv-bar{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;padding:12px;z-index:2}
+.pv-bar button,.pv-bar a{background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:10px;padding:9px 14px;font-size:15px;font-weight:700;text-decoration:none;cursor:pointer}
 </style>
 </head>
 <body>
@@ -637,12 +665,45 @@ html,body{overflow-x:hidden}
   <div class="c-list" id="chatList"></div>
   <div class="conv hidden" id="convView">
     <div class="msgs" id="msgs"></div>
+    <div class="att-menu hidden" id="attMenu">
+      <button data-att="photo"><span style="background:#8b5cf6">🖼</span>ફોટો (ગેલેરી)</button>
+      <button data-att="camera"><span style="background:#ec4899">📷</span>કેમેરા</button>
+      <button data-att="file"><span style="background:#3b82f6">📄</span>ફાઇલ</button>
+      <button data-att="contact"><span style="background:#0ea5e9">👤</span>કોન્ટેક્ટ નંબર</button>
+      <button data-att="loc"><span style="background:#16a34a">📍</span>મારું લોકેશન</button>
+    </div>
+    <input type="file" id="pickPhoto" accept="image/*" multiple class="hidden">
+    <input type="file" id="pickCam" accept="image/*" capture="environment" class="hidden">
+    <input type="file" id="pickFile" class="hidden">
     <div class="composer">
-      <button id="sendLoc" title="મારું લોકેશન મોકલો">📍</button>
+      <button id="attBtn" title="ફોટો / ફાઇલ / કોન્ટેક્ટ મોકલો">📎</button>
       <textarea id="msgIn" rows="1" placeholder="મેસેજ લખો..."></textarea>
       <button id="sendBtn" title="મોકલો">➤</button>
     </div>
   </div>
+</div>
+
+<!-- Share contact -->
+<div class="overlay hidden" id="ctModal">
+  <div class="modal">
+    <div class="m-head"><h3>👤 કોન્ટેક્ટ નંબર મોકલો</h3><button class="close" data-close="ctModal">×</button></div>
+    <button class="btn btn-light btn-block hidden" id="ctPick" style="margin-bottom:12px">📱 ફોનના કોન્ટેક્ટમાંથી પસંદ કરો</button>
+    <div class="row2">
+      <div class="field"><label>નામ</label><input id="ctName"></div>
+      <div class="field"><label>મોબાઇલ નંબર</label><input id="ctNum" inputmode="tel"></div>
+    </div>
+    <div class="err" id="ctErr"></div>
+    <button class="btn btn-pri btn-block" id="ctSend">➤ મોકલો</button>
+    <div class="wa-sec">અથવા એન્ટ્રીમાંથી પસંદ કરો</div>
+    <div class="field" style="margin-bottom:8px"><input id="ctSearch" placeholder="નામ કે નંબરથી શોધો..."></div>
+    <div id="ctList" class="ct-list"></div>
+  </div>
+</div>
+
+<!-- Photo viewer -->
+<div id="photoView" class="hidden">
+  <div class="pv-bar"><button id="pvClose">✕</button><a id="pvDl" class="hidden" download>⬇ ડાઉનલોડ</a></div>
+  <img id="pvImg" alt="">
 </div>
 
 <div id="iosHelp" class="hidden">
@@ -1457,7 +1518,7 @@ function renderMsgs(list){
     const mine=x.uid===me.uid;
     const body=x.type==='loc'&&x.lat!=null
       ?`<a class="mloc" href="${mapUrl(x.lat+','+x.lng)}" target="_blank" rel="noopener">📍 લોકેશન જુઓ ↗</a>`
-      :esc(x.text||'');
+      :(attBody(x)??esc(x.text||''));
     h+=`<div class="m ${mine?'me':''}">${!mine&&curChat==='group'?`<div class="mn">${esc(x.name||'')}</div>`:''}${body}<div class="mt">${new Date(t).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}</div></div>`;
   });
   const box=$('msgs'),atBottom=box.scrollHeight-box.scrollTop-box.clientHeight<80;
@@ -1465,14 +1526,14 @@ function renderMsgs(list){
   else box.scrollTop=box.scrollTop;
   requestAnimationFrame(()=>{if(atBottom)box.scrollTop=box.scrollHeight});
 }
-function sendMsg(msg,preview){
-  if(!curChat)return;
-  const ref=db.collection('chats').doc(curChat);
+function sendMsg(msg,preview){if(curChat)sendMsgTo(curChat,msg,preview)}
+function sendMsgTo(chatId,msg,preview){
+  const ref=db.collection('chats').doc(chatId);
   ref.collection('messages').add({...msg,uid:me.uid,name:me.name||me.email,createdAt:ts()}).catch(err=>toast(errMsg(err)));
   const meta={lastText:preview.slice(0,80),lastAt:ts(),lastBy:me.uid,lastName:me.name||me.email};
-  if(curChat!=='group')meta.members=curChat.slice(3).split('_');
+  if(chatId!=='group')meta.members=chatId.slice(3).split('_');
   ref.set(meta,{merge:true}).catch(()=>{});
-  markRead(curChat);
+  markRead(chatId);
 }
 $('sendBtn').onclick=()=>{
   const t=$('msgIn').value.trim();if(!t)return;
@@ -1480,13 +1541,155 @@ $('sendBtn').onclick=()=>{
 };
 $('msgIn').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&window.innerWidth>700){e.preventDefault();$('sendBtn').click()}});
 $('msgIn').addEventListener('input',e=>{e.target.style.height='';e.target.style.height=Math.min(120,e.target.scrollHeight)+'px'});
-$('sendLoc').onclick=()=>{
+/* ---------- chat attachments: photo, file, contact ----------
+   Firebase Storage needs a paid plan, so files are kept inside Firestore
+   in small pieces: chats/{chat}/blobs/{id} + .../parts/{n}. */
+const PART=700000,MAX_FILE=8*1024*1024;
+const fmtSize=n=>n<1024?n+' B':n<1048576?(n/1024).toFixed(0)+' KB':(n/1048576).toFixed(1)+' MB';
+const readB64=f=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(',')[1]||'');r.onerror=rej;r.readAsDataURL(f)});
+function loadImg(src){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=src})}
+function imgToB64(img,max,q){
+  let w=img.naturalWidth,h=img.naturalHeight;const k=Math.min(1,max/Math.max(w,h));w=Math.round(w*k);h=Math.round(h*k);
+  const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,w,h);x.drawImage(img,0,0,w,h);
+  return {b64:c.toDataURL('image/jpeg',q).split(',')[1],w,h};
+}
+async function putBlob(chatId,b64,meta){
+  const parts=Math.max(1,Math.ceil(b64.length/PART));
+  const ref=db.collection('chats').doc(chatId).collection('blobs').doc();
+  for(let i=0;i<parts;i++){
+    await ref.collection('parts').doc(String(i)).set({d:b64.slice(i*PART,(i+1)*PART)});
+    if(parts>1)toast('⬆ અપલોડ '+Math.round((i+1)*100/parts)+'%');
+  }
+  await ref.set({...meta,parts,by:me.uid,createdAt:ts()});
+  return ref.id;
+}
+const blobCache={};
+async function getBlob(chatId,bid){
+  if(blobCache[bid])return blobCache[bid];
+  const ref=db.collection('chats').doc(chatId).collection('blobs').doc(bid);
+  const m=await ref.get();if(!m.exists)throw new Error('ફાઇલ મળી નહીં');
+  const meta=m.data();let b64='';
+  for(let i=0;i<meta.parts;i++){const p=await ref.collection('parts').doc(String(i)).get();b64+=(p.data()||{}).d||''}
+  const bin=atob(b64),arr=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);
+  const blob=new Blob([arr],{type:meta.mime||'application/octet-stream'});
+  return blobCache[bid]={blob,url:URL.createObjectURL(blob),meta};
+}
+function needNet(){if(!navigator.onLine){toast('ફોટો/ફાઇલ મોકલવા ઇન્ટરનેટ જરૂરી છે');return false}return true}
+
+// attach menu
+$('attBtn').onclick=e=>{e.stopPropagation();$('attMenu').classList.toggle('hidden')};
+document.addEventListener('click',e=>{if(!e.target.closest('#attMenu,#attBtn'))$('attMenu').classList.add('hidden')});
+$('attMenu').addEventListener('click',e=>{
+  const b=e.target.closest('[data-att]');if(!b)return;$('attMenu').classList.add('hidden');
+  const a=b.dataset.att;
+  if(a==='photo')$('pickPhoto').click();
+  if(a==='camera')$('pickCam').click();
+  if(a==='file')$('pickFile').click();
+  if(a==='contact')openContact();
+  if(a==='loc')sendMyLoc();
+});
+
+async function sendPhoto(f){
+  if(!curChat||!needNet())return;
+  const chatId=curChat;let url;
+  try{
+    toast('📷 ફોટો તૈયાર થાય છે...');
+    url=URL.createObjectURL(f);const img=await loadImg(url);
+    let q=.8,full=imgToB64(img,1600,q);
+    while(full.b64.length>2.6e6&&q>.4){q-=.15;full=imgToB64(img,1280,q)}
+    const th=imgToB64(img,320,.6);
+    const bid=await putBlob(chatId,full.b64,{mime:'image/jpeg',name:(f.name||'photo').replace(/\.[^.]+$/,'')+'.jpg',size:Math.round(full.b64.length*3/4)});
+    sendMsgTo(chatId,{type:'photo',bid,thumb:th.b64,w:full.w,h:full.h,text:'📷 ફોટો'},'📷 ફોટો');
+    toast('📷 ફોટો મોકલ્યો ✔');
+  }catch(e){
+    if(f.size<=MAX_FILE){toast('ફોટો ખૂલ્યો નહીં, ફાઇલ તરીકે મોકલીએ છીએ');return sendFile(f)}
+    toast('ફોટો મોકલાયો નહીં: '+errMsg(e));
+  }finally{if(url)URL.revokeObjectURL(url)}
+}
+async function sendFile(f){
+  if(!curChat||!needNet())return;
+  if(f.size>MAX_FILE)return toast('ફાઇલ 8 MB થી મોટી છે. નાની ફાઇલ મોકલો');
+  const chatId=curChat;
+  try{
+    toast('📎 ફાઇલ અપલોડ થાય છે...');
+    const b64=await readB64(f);
+    const bid=await putBlob(chatId,b64,{mime:f.type||'application/octet-stream',name:f.name||'file',size:f.size});
+    sendMsgTo(chatId,{type:'file',bid,fname:f.name||'file',size:f.size,mime:f.type||'',text:'📎 '+(f.name||'ફાઇલ')},'📎 '+(f.name||'ફાઇલ'));
+    toast('📎 ફાઇલ મોકલી ✔');
+  }catch(e){toast('ફાઇલ મોકલાઈ નહીં: '+errMsg(e))}
+}
+$('pickPhoto').onchange=e=>{[...e.target.files].slice(0,10).forEach(f=>sendPhoto(f));e.target.value=''};
+$('pickCam').onchange=e=>{const f=e.target.files[0];if(f)sendPhoto(f);e.target.value=''};
+$('pickFile').onchange=e=>{const f=e.target.files[0];if(f)(/^image\/(jpeg|png|webp|gif)$/.test(f.type)?sendPhoto(f):sendFile(f));e.target.value=''};
+
+function sendMyLoc(){
   if(!navigator.geolocation)return toast('આ ડિવાઇસમાં GPS સપોર્ટ નથી');
   toast('📍 લોકેશન લઈ રહ્યા છીએ...');
   navigator.geolocation.getCurrentPosition(p=>{
     sendMsg({type:'loc',lat:+p.coords.latitude.toFixed(6),lng:+p.coords.longitude.toFixed(6),text:'📍 લોકેશન'},'📍 લોકેશન મોકલ્યું');
   },()=>toast('લોકેશન મળ્યું નહીં. પરમિશન ચેક કરો'),{enableHighAccuracy:true,timeout:15000});
+}
+
+// contact
+const canPick='contacts' in navigator&&'select' in (navigator.contacts||{});
+function openContact(){
+  $('ctName').value='';$('ctNum').value='';$('ctErr').textContent='';
+  $('ctPick').classList.toggle('hidden',!canPick);
+  renderCtList('');openM('ctModal');
+}
+$('ctPick').onclick=async()=>{
+  try{const [c]=await navigator.contacts.select(['name','tel'],{multiple:false});
+    if(c){$('ctName').value=(c.name&&c.name[0])||'';$('ctNum').value=((c.tel&&c.tel[0])||'').replace(/[^\d+]/g,'')}}catch(e){}
 };
+function renderCtList(q){
+  q=norm(q);const seen=new Set();
+  const list=entries.filter(x=>x.mobile&&!seen.has(x.mobile)&&seen.add(x.mobile)&&(!q||norm(x.name).includes(q)||x.mobile.includes(q))).slice(0,30);
+  $('ctList').innerHTML=list.length?list.map(x=>`<div class="ct-row" data-ctn="${esc(x.name)}" data-ctm="${esc(x.mobile)}"><b>${esc(x.name)}</b><small>📱 ${esc(x.mobile)}${x.station?' · '+esc(x.station):''}</small></div>`).join('')
+    :'<div class="hint">એન્ટ્રીમાં કોઈ મોબાઇલ નંબર મળ્યો નહીં</div>';
+}
+$('ctSearch').addEventListener('input',e=>renderCtList(e.target.value));
+$('ctList').addEventListener('click',e=>{const r=e.target.closest('[data-ctm]');if(r){$('ctName').value=r.dataset.ctn;$('ctNum').value=r.dataset.ctm}});
+$('ctSend').onclick=()=>{
+  const n=$('ctName').value.trim(),m=$('ctNum').value.replace(/[^\d+]/g,'');
+  if(!n)return $('ctErr').textContent='નામ લખો';
+  if(m.replace(/\D/g,'').length<10)return $('ctErr').textContent='સાચો મોબાઇલ નંબર લખો';
+  sendMsg({type:'contact',cname:n,cnum:m,text:'👤 '+n},'👤 '+n+' નો નંબર');closeM('ctModal');toast('👤 કોન્ટેક્ટ મોકલ્યો ✔');
+};
+
+// open photo / file / save contact
+$('msgs').addEventListener('click',async e=>{
+  const ph=e.target.closest('[data-photo]'),fl=e.target.closest('[data-file]'),vc=e.target.closest('[data-vcf]');
+  if(ph){
+    $('pvImg').src='data:image/jpeg;base64,'+ph.dataset.th;$('photoView').classList.remove('hidden');$('pvDl').classList.add('hidden');
+    try{const b=await getBlob(curChat,ph.dataset.photo);$('pvImg').src=b.url;$('pvDl').href=b.url;$('pvDl').download=b.meta.name||'photo.jpg';$('pvDl').classList.remove('hidden')}
+    catch(err){toast('પૂરો ફોટો ખૂલ્યો નહીં')}
+  }
+  if(fl){
+    toast('⬇ ફાઇલ ખૂલે છે...');
+    try{const b=await getBlob(curChat,fl.dataset.file);const a=document.createElement('a');a.href=b.url;a.download=b.meta.name||'file';
+      if(/pdf|image|text/.test(b.meta.mime||''))a.target='_blank';document.body.appendChild(a);a.click();a.remove()}
+    catch(err){toast('ફાઇલ ખૂલી નહીં: '+errMsg(err))}
+  }
+  if(vc){
+    const v='BEGIN:VCARD\nVERSION:3.0\nFN:'+vc.dataset.n+'\nTEL;TYPE=CELL:'+vc.dataset.m+'\nEND:VCARD\n';
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([v],{type:'text/vcard'}));a.download=vc.dataset.n.replace(/[^\w઀-૿ ]/g,'')+'.vcf';
+    document.body.appendChild(a);a.click();a.remove();toast('ફોનમાં સેવ કરવા ખોલો');
+  }
+});
+$('pvClose').onclick=()=>$('photoView').classList.add('hidden');
+function attBody(x){
+  if(x.type==='photo')return `<img class="m-photo" src="data:image/jpeg;base64,${x.thumb||''}" data-photo="${esc(x.bid)}" data-th="${x.thumb||''}" alt="ફોટો" style="aspect-ratio:${x.w||4}/${x.h||3}">`;
+  if(x.type==='file'){
+    const ext=((x.fname||'').split('.').pop()||'').toLowerCase(),ic=/pdf/.test(ext)?'📕':/xls|csv/.test(ext)?'📗':/doc/.test(ext)?'📘':/mp3|wav|m4a|ogg|aac/.test(ext)?'🎵':/mp4|mov|3gp|mkv/.test(ext)?'🎬':/zip|rar/.test(ext)?'🗜':'📄';
+    return `<button class="m-file" data-file="${esc(x.bid)}"><span class="mf-ic">${ic}</span><span class="mf-t"><b>${esc(x.fname||'ફાઇલ')}</b><small>${fmtSize(x.size||0)} · ખોલવા દબાવો</small></span></button>`;
+  }
+  if(x.type==='contact'){
+    const d=(x.cnum||'').replace(/\D/g,''),wa=d.length===10?'91'+d:d;
+    return `<div class="m-ct"><div class="mc-h"><span class="mc-av">👤</span><span><b>${esc(x.cname||'')}</b><small>${esc(x.cnum||'')}</small></span></div>
+      <div class="mc-b"><a href="tel:${esc(x.cnum||'')}">📞 કૉલ</a><a href="https://wa.me/${esc(wa)}" target="_blank" rel="noopener">WhatsApp</a><button data-vcf data-n="${esc(x.cname||'')}" data-m="${esc(x.cnum||'')}">💾 સેવ</button></div></div>`;
+  }
+  return null;
+}
 
 /* Android back button closes the chat screen */
 window.addEventListener('popstate',()=>{
@@ -1495,9 +1698,10 @@ window.addEventListener('popstate',()=>{
 });
 
 /* ================= VERSION ================= */
-const APP_VERSION='1.0.4';
+const APP_VERSION='1.1.0';
 const APP_DATE='26/09/2026';
 const APP_NEWS=[
+  '📎 ચેટમાં ફોટો, કેમેરા, ફાઇલ (8 MB સુધી) અને કોન્ટેક્ટ નંબર મોકલો',
   '🚫 ટીમ લોકેશન (ટ્રેકિંગ) સુવિધા કાઢી નાખી, જૂનું સેવ થયેલું લોકેશન પણ ડિલીટ',
   '🔍 બે આંગળીથી ઝૂમ — અક્ષર મોટા થાય, બાજુમાં ખસવું ન પડે',
   '👤 હેડરમાં લોગો પૂરો અને નામ મોટું-રંગીન',
