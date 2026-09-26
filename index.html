@@ -353,6 +353,12 @@ html,body{overflow-x:hidden}
 #setModal .set-sec.open h4{background:var(--tint);color:var(--pri2)}
 .ss-body{display:none;padding:12px 14px 14px;border-top:1px solid var(--line)}
 #setModal .set-sec.open .ss-body{display:block}
+
+.wa-nums{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:8px 0 8px}
+.wa-nums:empty{display:none}
+.wn{border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:20px;padding:4px 12px;font-size:13px;font-weight:600;cursor:pointer}
+.wn.on{background:#25d366;border-color:#25d366;color:#fff}
+.mob-btn{white-space:normal;text-align:left;word-break:break-word}
 </style>
 </head>
 <body>
@@ -516,7 +522,7 @@ html,body{overflow-x:hidden}
     <div class="m-head"><h3 id="mTitle">નવી એન્ટ્રી</h3><button class="close" data-close="entryModal">×</button></div>
     <div class="field"><label>નામ *</label><input id="fName" placeholder="પૂરું નામ"></div>
     <div class="row2">
-      <div class="field"><label>મોબાઇલ નંબર</label><input id="fMobile" inputmode="numeric" maxlength="10" placeholder="10 અંક"></div>
+      <div class="field"><label>મોબાઇલ નંબર</label><input id="fMobile" inputmode="tel" placeholder="દા.ત. 98765 43210 અથવા બે નંબર"></div>
       <div class="field"><label>પોલીસ સ્ટેશનનું નામ</label><input id="fStation" list="stationList" placeholder="દા.ત. ગોંડલ તાલુકા"><datalist id="stationList"></datalist></div>
     </div>
     <div class="field"><label>લોકેશન (સરનામું અથવા Lat,Long)</label>
@@ -542,6 +548,7 @@ html,body{overflow-x:hidden}
     <div class="m-head"><h3>📱 WhatsApp</h3><button class="close" data-close="waModal">×</button></div>
     <div class="wa-head">
       <div class="wa-num" id="waNum"></div>
+      <div class="wa-nums" id="waNums"></div>
       <div class="wa-name" id="waName"></div>
     </div>
     <div class="wa-sec">કઈ WhatsApp માંથી ખોલવું છે?</div>
@@ -1065,7 +1072,8 @@ function render(){
   let arr=entries.slice().sort((a,b)=>((a.done?1:0)-(b.done?1:0))||(ms(b.createdAt)-ms(a.createdAt)));
   if(filter==='done')arr=arr.filter(x=>x.done);
   if(filter==='pending')arr=arr.filter(x=>!x.done);
-  if(q)arr=arr.filter(x=>[x.name,x.mobile,x.station,x.location,x.details,x.createdBy].some(v=>norm(v).includes(q)));
+  const qd=q.replace(/\D/g,'');
+  if(q)arr=arr.filter(x=>[x.name,x.mobile,x.station,x.location,x.details,x.createdBy].some(v=>norm(v).includes(q))||(qd.length>=3&&String(x.mobile||'').replace(/\D/g,'').includes(qd)));
   renderGroups(arr,!!q||filter!=='all');
   $('empty').classList.toggle('hidden',arr.length>0);
   $('emptyTxt').textContent=entries.length?'શોધ મુજબ કોઈ એન્ટ્રી મળી નહીં.':'હજુ કોઈ એન્ટ્રી નથી. ＋ બટન દબાવી પહેલી એન્ટ્રી ઉમેરો.';
@@ -1160,13 +1168,12 @@ function openEntry(id){
   openM('entryModal');setTimeout(()=>$('fName').focus(),100);
 }
 $('addBtn').onclick=()=>openEntry();$('addBtn2').onclick=()=>openEntry();
-$('fMobile').addEventListener('input',e=>e.target.value=e.target.value.replace(/\D/g,'').slice(0,10));
 
 $('saveBtn').onclick=()=>{
   const d={name:$('fName').value.trim(),mobile:$('fMobile').value.trim(),station:$('fStation').value.trim(),
     location:$('fLoc').value.trim(),details:$('fDet').value.trim(),done:$('fDone').checked};
   if(!d.name)return $('fErr').textContent='નામ લખવું જરૂરી છે';
-  if(d.mobile&&d.mobile.length!==10)return $('fErr').textContent='મોબાઇલ નંબર 10 અંકનો હોવો જોઈએ';
+  d.mobile=d.mobile.replace(/[ \t]+/g,' ');
   const meta={updatedAt:ts(),updatedBy:me.name};
   if(editId){
     const old=entries.find(v=>v.id===editId)||{};
@@ -1191,7 +1198,23 @@ $('gpsBtn').onclick=()=>{
 
 /* ---------- WhatsApp ---------- */
 const isAndroid=/android/i.test(navigator.userAgent);
-function waPhone(m){m=(m||'').replace(/\D/g,'');return m.length===10?'91'+m:m}
+/* "98765 43210, 90000 11111" -> ['9876543210','9000011111'] */
+function phoneList(str){
+  const out=[];let cur='';
+  String(str||'').split(/[,;\/|\n]+/).forEach(part=>{
+    cur='';
+    part.trim().split(/\s+/).forEach(tok=>{
+      const d=tok.replace(/[^\d+]/g,'');if(!d)return;
+      cur+=d;
+      if(cur.replace(/\D/g,'').length>=10){out.push(cur);cur=''}
+    });
+    if(cur.replace(/\D/g,'').length>=3)out.push(cur);
+  });
+  return out;
+}
+function waPhone(m){m=(m||'').replace(/\D/g,'');if(m.length===11&&m[0]==='0')m=m.slice(1);return m.length===10?'91'+m:m}
+function telOf(m){const d=(m||'').replace(/[^\d+]/g,'');return d.replace(/\D/g,'').length===10?'+91'+d:d}
+let waNumSel='';
 function paintWaStatus(){
   const x=entries.find(v=>v.id===waId);if(!x)return;
   document.querySelectorAll('[data-was]').forEach(b=>{
@@ -1201,13 +1224,17 @@ function paintWaStatus(){
 }
 function openWa(id){
   waId=id;const x=entries.find(v=>v.id===id);if(!x)return;
-  $('waNum').textContent='+91 '+x.mobile;$('waName').textContent=x.name;
-  $('waTel').href='tel:+91'+x.mobile;
+  const nums=phoneList(x.mobile);waNumSel=nums[0]||x.mobile;
+  $('waName').textContent=x.name;
+  const paintNum=()=>{$('waNum').textContent=waNumSel.replace(/\D/g,'').length===10?'+91 '+waNumSel:waNumSel;$('waTel').href='tel:'+telOf(waNumSel);
+    $('waNums').innerHTML=nums.length>1?nums.map(n=>`<button class="wn ${n===waNumSel?'on':''}" data-wn="${esc(n)}">${esc(n)}</button>`).join(''):''};
+  $('waNums').onclick=e=>{const b=e.target.closest('[data-wn]');if(b){waNumSel=b.dataset.wn;paintNum()}};
+  paintNum();
   $('waAndroid').classList.toggle('hidden',!isAndroid);
   paintWaStatus();openM('waModal');
 }
 document.querySelectorAll('[data-app]').forEach(b=>b.onclick=()=>{
-  const x=entries.find(v=>v.id===waId);if(!x)return;const p=waPhone(x.mobile),app=b.dataset.app;
+  const x=entries.find(v=>v.id===waId);if(!x)return;const p=waPhone(waNumSel||x.mobile),app=b.dataset.app;
   if(app==='ask'){window.location.href='https://wa.me/'+p;return}
   const pkg=app==='w4b'?'com.whatsapp.w4b':'com.whatsapp';
   window.location.href='intent://send/?phone='+p+'#Intent;scheme=whatsapp;package='+pkg+
@@ -1219,7 +1246,7 @@ document.querySelectorAll('[data-was]').forEach(b=>b.onclick=()=>{
   col().doc(x.id).update({wa:v,updatedAt:ts(),updatedBy:me.name}).catch(err=>toast(errMsg(err)));
   toast('નોંધ થઇ ગઇ ✔');
 });
-$('waCopy').onclick=()=>{const x=entries.find(v=>v.id===waId);if(x)copyText(x.mobile,'નંબર કૉપી થયો ✔')};
+$('waCopy').onclick=()=>{const x=entries.find(v=>v.id===waId);if(x)copyText(waNumSel||x.mobile,'નંબર કૉપી થયો ✔')};
 
 /* ================= SETTINGS ================= */
 $('setBtn').onclick=()=>{
@@ -1668,8 +1695,8 @@ $('ctPick').onclick=async()=>{
 };
 function renderCtList(q){
   q=norm(q);const seen=new Set();
-  const list=entries.filter(x=>x.mobile&&!seen.has(x.mobile)&&seen.add(x.mobile)&&(!q||norm(x.name).includes(q)||x.mobile.includes(q))).slice(0,30);
-  $('ctList').innerHTML=list.length?list.map(x=>`<div class="ct-row" data-ctn="${esc(x.name)}" data-ctm="${esc(x.mobile)}"><b>${esc(x.name)}</b><small>📱 ${esc(x.mobile)}${x.station?' · '+esc(x.station):''}</small></div>`).join('')
+  const list=entries.filter(x=>x.mobile&&!seen.has(x.mobile)&&seen.add(x.mobile)&&(!q||norm(x.name).includes(q)||x.mobile.replace(/\D/g,'').includes(q.replace(/\D/g,'')||'~'))).slice(0,30);
+  $('ctList').innerHTML=list.length?list.map(x=>`<div class="ct-row" data-ctn="${esc(x.name)}" data-ctm="${esc(phoneList(x.mobile)[0]||x.mobile)}"><b>${esc(x.name)}</b><small>📱 ${esc(x.mobile)}${x.station?' · '+esc(x.station):''}</small></div>`).join('')
     :'<div class="hint">એન્ટ્રીમાં કોઈ મોબાઇલ નંબર મળ્યો નહીં</div>';
 }
 $('ctSearch').addEventListener('input',e=>renderCtList(e.target.value));
@@ -1723,9 +1750,10 @@ window.addEventListener('popstate',()=>{
 });
 
 /* ================= VERSION ================= */
-const APP_VERSION='1.1.1';
+const APP_VERSION='1.1.2';
 const APP_DATE='26/09/2026';
 const APP_NEWS=[
+  '📱 મોબાઇલ નંબર ગમે તેટલા અંક, સ્પેસ સાથે અને એક થી વધુ નંબર લખી શકાય',
   '⚙ સેટિંગ્સના બધા વિભાગ બંધ — નામ દબાવો એટલે ખૂલે',
   '📎 ચેટમાં ફોટો, કેમેરા, ફાઇલ (8 MB સુધી) અને કોન્ટેક્ટ નંબર મોકલો',
   '🚫 ટીમ લોકેશન (ટ્રેકિંગ) સુવિધા કાઢી નાખી, જૂનું સેવ થયેલું લોકેશન પણ ડિલીટ',
