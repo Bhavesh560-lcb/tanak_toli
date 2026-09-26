@@ -1,5 +1,5 @@
-// Tanak Toli service worker - એપને ફોનમાં ઇન્સ્ટોલ અને ઓફલાઇન ખોલવા માટે
-const CACHE = 'tanak-toli-v3';
+// Tanak Toli service worker - ફોનમાં ઇન્સ્ટોલ, ઓફલાઇન ખોલવા અને આપોઆપ અપડેટ માટે
+const CACHE = 'tanak-toli-v2.5.1';
 const SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './favicon.png', './logo.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
@@ -29,10 +29,13 @@ self.addEventListener('fetch', e => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
 
-  // Page itself: always try the internet first so updates arrive; fall back to the saved copy offline
+  // version.json: always from the internet (used for auto update)
+  if (url.origin === location.origin && url.pathname.endsWith('version.json')) return;
+
+  // Page itself: internet first so updates arrive; saved copy when offline
   if (url.origin === location.origin && (req.mode === 'navigate' || url.pathname.endsWith('.html'))) {
     e.respondWith(
-      fetch(req).then(res => {
+      fetch(req, { cache: 'no-store' }).then(res => {
         const copy = res.clone();
         caches.open(CACHE).then(c => c.put('./index.html', copy));
         return res;
@@ -40,11 +43,10 @@ self.addEventListener('fetch', e => {
     );
     return;
   }
-  // Icons, manifest
   if (url.origin === location.origin) { e.respondWith(cacheFirst(req)); return; }
-  // Firebase library and fonts (not the database itself)
   if ((url.hostname === 'www.gstatic.com' && url.pathname.startsWith('/firebasejs/')) ||
-      url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
+      url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com' ||
+      (url.hostname === 'cdnjs.cloudflare.com' && url.pathname.includes('/leaflet/'))) {
     e.respondWith(cacheFirst(req));
   }
 });
