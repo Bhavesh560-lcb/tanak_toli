@@ -1,5 +1,5 @@
 // Tanak Toli service worker - એપને ફોનમાં ઇન્સ્ટોલ અને ઓફલાઇન ખોલવા માટે
-const CACHE = 'tanak-toli-v2';
+const CACHE = 'tanak-toli-v3';
 const SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './favicon.png', './logo.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
