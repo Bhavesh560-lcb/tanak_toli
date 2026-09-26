@@ -1,5 +1,5 @@
 // Tanak Toli service worker - ફોનમાં ઇન્સ્ટોલ, ઓફલાઇન ખોલવા અને આપોઆપ અપડેટ માટે
-const CACHE = 'tanak-toli-v1.2.0';
+const CACHE = 'tanak-toli-v1.3.2';
 const SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './favicon.png', './logo.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
@@ -45,7 +45,8 @@ self.addEventListener('fetch', e => {
   }
   if (url.origin === location.origin) { e.respondWith(cacheFirst(req)); return; }
   if ((url.hostname === 'www.gstatic.com' && url.pathname.startsWith('/firebasejs/')) ||
-      url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
+      url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com' ||
+      (url.hostname === 'cdnjs.cloudflare.com' && url.pathname.includes('leaflet'))) {
     e.respondWith(cacheFirst(req));
   }
 });
