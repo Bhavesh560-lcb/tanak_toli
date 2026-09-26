@@ -381,7 +381,7 @@ html[data-theme="dark"] .tk3{color:#53bdeb}
 .em-pin{width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:linear-gradient(135deg,#ea580c,#fbbf24);border:2.5px solid #fff;box-shadow:0 3px 8px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center}
 .em-pin.ok{background:linear-gradient(135deg,#059669,#34d399)}
 .em-pin.approx{border-style:dashed;opacity:.9}
-.em-pin span{transform:rotate(45deg);font-size:13px;color:#fff;font-weight:800}
+.em-pin span{transform:rotate(45deg);font-size:15px;line-height:1;color:#fff;font-weight:800;text-shadow:0 1px 2px rgba(0,0,0,.35);font-family:'Noto Sans Gujarati',system-ui,sans-serif}
 .em-pop{font-family:'Noto Sans Gujarati',system-ui,sans-serif;font-size:13px;line-height:1.55;min-width:180px}
 .em-pop b{font-size:15px;margin-right:6px}
 .em-pop .badge{margin:2px 0 4px}
@@ -1971,6 +1971,13 @@ function emPopup(x,ll){
     ${myPos?`<div class="em-dist">🚶 તમારાથી ${distTxt(ll)}</div>`:''}
     <div class="em-btns"><a href="https://www.google.com/maps/dir/?api=1&destination=${ll.lat},${ll.lng}" target="_blank" rel="noopener">🧭 રસ્તો</a><a href="${mapUrl(x.location)}" target="_blank" rel="noopener">Maps ↗</a><button data-emedit="${x.id}">✏ વિગત</button></div></div>`;
 }
+/* first letter of the name: Gujarati letters keep their vowel sign (કુ, મ), English in capitals */
+const _seg=typeof Intl!=='undefined'&&Intl.Segmenter?new Intl.Segmenter('gu',{granularity:'grapheme'}):null;
+function firstLetter(n){
+  n=String(n||'').trim().replace(/^[^\p{L}\p{N}]+/u,'');if(!n)return '?';
+  const g=_seg?_seg.segment(n)[Symbol.iterator]().next().value.segment:Array.from(n)[0];
+  return g.toUpperCase();
+}
 function renderEmap(){
   if(!emapOpen())return;
   renderEmChips();
@@ -1985,7 +1992,7 @@ function renderEmap(){
     pts.push([ll.lat,ll.lng]);
     if(!emLayer)return;
     const icon=L.divIcon({className:'',iconSize:[30,40],iconAnchor:[15,38],popupAnchor:[0,-34],
-      html:`<div class="em-pin ${x.done?'ok':''} ${ll.exact?'':'approx'}"><span>${x.done?'✔':'⏳'}</span></div>`});
+      html:`<div class="em-pin ${x.done?'ok':''} ${ll.exact?'':'approx'}"><span>${esc(firstLetter(x.name))}</span></div>`});
     L.marker([ll.lat,ll.lng],{icon}).bindTooltip(esc(x.name),{direction:'top',offset:[0,-36]}).bindPopup(emPopup(x,ll),{maxWidth:260}).addTo(emLayer);
   });
   if(emLayer){emap.addLayer(emLayer);
@@ -2025,9 +2032,10 @@ window.addEventListener('popstate',()=>{
 });
 
 /* ================= VERSION ================= */
-const APP_VERSION='1.3.4';
+const APP_VERSION='1.3.5';
 const APP_DATE='26/09/2026';
 const APP_NEWS=[
+  '🔤 નકશાની પિનમાં વ્યક્તિના નામનો પહેલો અક્ષર',
   '🗺 નકશાનું ગોળ બટન હવે નીચે ＋ ની ઉપર',
   '🛰 નકશામાં સેટેલાઇટ વ્યૂ — નકશો / સેટેલાઇટ / નામ સાથે',
   '🔤 એન્ટ્રીઓ અને પોલીસ સ્ટેશનનાં નામ ABC / કક્કા પ્રમાણે ક્રમમાં',
