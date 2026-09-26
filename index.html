@@ -343,6 +343,16 @@ html,body{overflow-x:hidden}
 #photoView img{max-width:100%;max-height:100%;object-fit:contain}
 .pv-bar{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;padding:12px;z-index:2}
 .pv-bar button,.pv-bar a{background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:10px;padding:9px 14px;font-size:15px;font-weight:700;text-decoration:none;cursor:pointer}
+
+/* ---------- collapsible settings ---------- */
+#setModal .set-sec{padding:0;overflow:hidden;margin-bottom:10px}
+#setModal .set-sec h4{margin:0;padding:15px 14px;display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;font-size:15.5px}
+#setModal .set-sec h4:active{background:var(--soft3)}
+.ss-chev{margin-left:auto;flex:none;color:var(--muted);transition:transform .2s}
+#setModal .set-sec.open .ss-chev{transform:rotate(180deg)}
+#setModal .set-sec.open h4{background:var(--tint);color:var(--pri2)}
+.ss-body{display:none;padding:12px 14px 14px;border-top:1px solid var(--line)}
+#setModal .set-sec.open .ss-body{display:block}
 </style>
 </head>
 <body>
@@ -1215,8 +1225,23 @@ $('waCopy').onclick=()=>{const x=entries.find(v=>v.id===waId);if(x)copyText(x.mo
 $('setBtn').onclick=()=>{
   ['cpOld','cpNew','cpNew2','euName','euEmail','euPass'].forEach(i=>$(i).value='');
   $('cpErr').textContent='';$('euErr').textContent='';$('myName').value=me.name||'';
-  paintMe();renderUsers();openM('setModal');
+  paintMe();renderUsers();
+  document.querySelectorAll('#setModal .set-sec.open').forEach(x=>x.classList.remove('open')); // always start minimized
+  openM('setModal');
 };
+/* Settings sections: collapsed, tap the title to open/close */
+document.querySelectorAll('#setModal .set-sec').forEach(sec=>{
+  const h=sec.querySelector('h4');if(!h)return;
+  const body=document.createElement('div');body.className='ss-body';
+  [...sec.childNodes].filter(n=>n!==h).forEach(n=>body.appendChild(n));
+  sec.appendChild(body);
+  h.insertAdjacentHTML('beforeend','<svg class="ss-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>');
+  h.onclick=()=>{
+    const open=!sec.classList.contains('open');
+    document.querySelectorAll('#setModal .set-sec.open').forEach(x=>x.classList.remove('open')); // only one open at a time
+    if(open){sec.classList.add('open');setTimeout(()=>sec.scrollIntoView({behavior:'smooth',block:'nearest'}),50)}
+  };
+});
 $('myNameBtn').onclick=()=>{
   const n=$('myName').value.trim();if(!n)return toast('નામ લખો');
   db.collection('users').doc(me.uid).update({name:n}).then(()=>toast('નામ સેવ થયું ✔')).catch(err=>toast(errMsg(err)));
@@ -1266,7 +1291,7 @@ function paintReq(){
         <button class="btn btn-danger" data-ua="reject" data-uid="${u.uid}">✖ નામંજૂર</button>
       </div></div>`).join('');
 }
-$('reqBanner').onclick=()=>$('setBtn').click();
+$('reqBanner').onclick=()=>{$('setBtn').click();$('reqWrap').classList.add('open')};
 $('reqList').addEventListener('click',e=>userAction(e));
 function renderUsers(){
   if(!isAdmin())return;
@@ -1698,9 +1723,10 @@ window.addEventListener('popstate',()=>{
 });
 
 /* ================= VERSION ================= */
-const APP_VERSION='1.1.0';
+const APP_VERSION='1.1.1';
 const APP_DATE='26/09/2026';
 const APP_NEWS=[
+  '⚙ સેટિંગ્સના બધા વિભાગ બંધ — નામ દબાવો એટલે ખૂલે',
   '📎 ચેટમાં ફોટો, કેમેરા, ફાઇલ (8 MB સુધી) અને કોન્ટેક્ટ નંબર મોકલો',
   '🚫 ટીમ લોકેશન (ટ્રેકિંગ) સુવિધા કાઢી નાખી, જૂનું સેવ થયેલું લોકેશન પણ ડિલીટ',
   '🔍 બે આંગળીથી ઝૂમ — અક્ષર મોટા થાય, બાજુમાં ખસવું ન પડે',
