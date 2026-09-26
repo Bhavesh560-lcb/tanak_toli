@@ -359,6 +359,13 @@ html,body{overflow-x:hidden}
 .wn{border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:20px;padding:4px 12px;font-size:13px;font-weight:600;cursor:pointer}
 .wn.on{background:#25d366;border-color:#25d366;color:#fff}
 .mob-btn{white-space:normal;text-align:left;word-break:break-word}
+
+.tk{display:inline-flex;align-items:center;margin-left:4px;vertical-align:-2px;cursor:pointer}
+.tk1,.tk2{color:#8696a0}
+.tk3{color:#34b7f1}
+.tk0{font-size:10px}
+.c-mid small .tk{margin:0 2px 0 0;vertical-align:-3px}
+html[data-theme="dark"] .tk3{color:#53bdeb}
 </style>
 </head>
 <body>
@@ -1482,6 +1489,8 @@ function startSocial(){
     if(old!==undefined&&t>old&&c.lastBy!==me.uid&&curChat!==c.id)
       toast('💬 '+(c.lastName||'')+(c.id==='group'?' (ગ્રુપ)':'')+': '+(c.lastText||''));
     prevLast[c.id]=t;chats[c.id]=c;
+    markDelivered(c);
+    if(c.id===curChat){markSeen(c);if(lastMsgList)renderMsgs(lastMsgList)}
   };
   unsubChats=db.collection('chats').where('members','array-contains',me.uid).onSnapshot(s=>{
     s.docs.forEach(onChat);renderChatList();paintUnread();
@@ -1527,7 +1536,7 @@ function renderChatList(){
   const others=members.filter(m=>m.uid!==me.uid).map(m=>({...m,chat:chats[dmId(me.uid,m.uid)]||{}}))
     .sort((a,b)=>(ms(b.chat.lastAt)-ms(a.chat.lastAt))||(a.name||'').localeCompare(b.name||''));
   const row=(id,av,name,sub,c)=>`<div class="c-row" data-chat="${id}" data-title="${esc(name)}">${av}
-      <div class="c-mid"><b>${esc(name)}</b><small>${sub}</small></div>
+      <div class="c-mid"><b>${esc(name)}</b><small>${c.lastBy===me.uid&&c.lastAt?tickHtml(tickState(id,ms(c.lastAt)))+' ':''}${sub}</small></div>
       <div class="c-end">${c.lastAt?hm(c.lastAt):''}${unreadOf(id)?'<br><span class="c-unread">નવો</span>':''}</div></div>`;
   let h=row('group','<div class="av grp">👥</div>','બધા (ટીમ ગ્રુપ)',
     g.lastText?esc((g.lastBy===me.uid?'તમે':g.lastName||'')+': '+g.lastText):'આખી ટીમ માટે એક ગ્રુપ',g);
@@ -1550,14 +1559,57 @@ function openConv(id,title){
   $('chatSub').textContent=id==='group'?(members.length+' સભ્યો'):(m&&Date.now()-ms(m.lastSeen)<5*60000?'🟢 ઓનલાઇન':'છેલ્લે: '+(m?ago(m.lastSeen)||'-':'-'));
   $('msgs').innerHTML='<div class="m-day">લોડ થાય છે...</div>';
   if(unsubMsgs)unsubMsgs();
-  unsubMsgs=db.collection('chats').doc(id).collection('messages').orderBy('createdAt').limitToLast(300).onSnapshot(s=>{
-    renderMsgs(s.docs.map(d=>({id:d.id,...d.data({serverTimestamps:'estimate'})})));markRead(id);paintUnread();
+  lastMsgList=null;
+  unsubMsgs=db.collection('chats').doc(id).collection('messages').orderBy('createdAt').limitToLast(300).onSnapshot({includeMetadataChanges:true},s=>{
+    lastMsgList=s.docs.map(d=>({id:d.id,...d.data({serverTimestamps:'estimate'}),_pw:!!(d.metadata&&d.metadata.hasPendingWrites)}));
+    renderMsgs(lastMsgList);markRead(id);paintUnread();if(chats[id])markSeen(chats[id]);
   },err=>{$('msgs').innerHTML='<div class="m-day">'+esc(errMsg(err))+'</div>'});
   markRead(id);paintUnread();
   setTimeout(()=>$('msgIn').focus(),200);
 }
+
+/* ---------- WhatsApp style ticks ----------
+   🕓 not sent yet · ✓ sent · ✓✓ grey delivered · ✓✓ blue read */
+let lastMsgList=null;
+const _rcptSent={};
+function othersOf(chatId){
+  return chatId==='group'?members.filter(m=>m.uid!==me.uid).map(m=>m.uid):chatId.slice(3).split('_').filter(u=>u!==me.uid);
+}
+function tickState(chatId,t){
+  const c=chats[chatId]||{},rd=c.read||{},dv=c.dlv||{},o=othersOf(chatId);
+  if(!o.length)return 1;
+  if(o.every(u=>ms(rd[u])>=t))return 3;
+  if(o.every(u=>Math.max(ms(rd[u]),ms(dv[u]))>=t))return 2;
+  return 1;
+}
+function tickHtml(st,t){
+  if(st===0)return '<span class="tk tk0" title="મોકલાય છે">🕓</span>';
+  const one='<path d="M1.5 8.5l3.5 3.5 7-8"/>',two='<path d="M1.5 8.5l3.5 3.5 7-8"/><path d="M8 11.3l.7.7 7-8"/>';
+  const title=st===3?'વાંચ્યો':st===2?'પહોંચ્યો':'મોકલ્યો';
+  return `<span class="tk tk${st}" title="${title}"${t?` data-tk="${t}"`:''}><svg width="${st===1?15:19}" height="14" viewBox="0 0 ${st===1?14:18} 16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${st===1?one:two}</svg></span>`;
+}
+function rcpt(c,field){
+  if(!me||!c||!c.lastBy||c.lastBy===me.uid)return;
+  const mine=ms((c[field]||{})[me.uid]),key=c.id+field;
+  if(mine>=ms(c.lastAt)||_rcptSent[key]>=ms(c.lastAt))return;
+  _rcptSent[key]=ms(c.lastAt);
+  const upd={};upd[field]={[me.uid]:ts()};if(field==='read')upd.dlv={[me.uid]:ts()};
+  db.collection('chats').doc(c.id).set(upd,{merge:true}).catch(()=>{});
+}
+function markDelivered(c){rcpt(c,'dlv')}
+function markSeen(c){if(document.visibilityState==='visible'&&curChat===c.id)rcpt(c,'read')}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&curChat&&chats[curChat])markSeen(chats[curChat])});
+// tap the tick to see who read / received (useful in group)
+$('msgs').addEventListener('click',e=>{
+  const tk=e.target.closest('[data-tk]');if(!tk||!curChat)return;
+  const t=+tk.dataset.tk,c=chats[curChat]||{},rd=c.read||{},dv=c.dlv||{};
+  const nm=u=>(members.find(m=>m.uid===u)||{}).name||'?';
+  const o=othersOf(curChat),r=o.filter(u=>ms(rd[u])>=t),d=o.filter(u=>!r.includes(u)&&ms(dv[u])>=t),n=o.filter(u=>!r.includes(u)&&!d.includes(u));
+  alert((r.length?'✓✓ વાંચ્યો (બ્લુ): '+r.map(nm).join(', ')+'\n\n':'')+(d.length?'✓✓ પહોંચ્યો: '+d.map(nm).join(', ')+'\n\n':'')+(n.length?'✓ હજુ પહોંચ્યો નથી: '+n.map(nm).join(', '):'')||'કોઈ નથી');
+});
+
 function closeConv(){
-  if(unsubMsgs){unsubMsgs();unsubMsgs=null}curChat=null;
+  if(unsubMsgs){unsubMsgs();unsubMsgs=null}curChat=null;lastMsgList=null;
   $('convView').classList.add('hidden');$('chatList').classList.remove('hidden');
   $('chatTitle').textContent='💬 ચેટ';$('chatSub').textContent='ટીમ સાથે વાત કરો';renderChatList();
 }
@@ -1571,7 +1623,7 @@ function renderMsgs(list){
     const body=x.type==='loc'&&x.lat!=null
       ?`<a class="mloc" href="${mapUrl(x.lat+','+x.lng)}" target="_blank" rel="noopener">📍 લોકેશન જુઓ ↗</a>`
       :(attBody(x)??esc(x.text||''));
-    h+=`<div class="m ${mine?'me':''}">${!mine&&curChat==='group'?`<div class="mn">${esc(x.name||'')}</div>`:''}${body}<div class="mt">${new Date(t).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}</div></div>`;
+    h+=`<div class="m ${mine?'me':''}">${!mine&&curChat==='group'?`<div class="mn">${esc(x.name||'')}</div>`:''}${body}<div class="mt">${new Date(t).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}${mine?tickHtml(x._pw?0:tickState(curChat,t),t):''}</div></div>`;
   });
   const box=$('msgs'),atBottom=box.scrollHeight-box.scrollTop-box.clientHeight<80;
   box.innerHTML=h;if(atBottom||list.length&&list[list.length-1].uid===me.uid)box.scrollTop=box.scrollHeight;
@@ -1750,9 +1802,10 @@ window.addEventListener('popstate',()=>{
 });
 
 /* ================= VERSION ================= */
-const APP_VERSION='1.1.2';
+const APP_VERSION='1.2.0';
 const APP_DATE='26/09/2026';
 const APP_NEWS=[
+  '✓✓ ચેટમાં WhatsApp જેવાં ટીક — એક ટીક, ડબલ ટીક અને બ્લુ ટીક',
   '📱 મોબાઇલ નંબર ગમે તેટલા અંક, સ્પેસ સાથે અને એક થી વધુ નંબર લખી શકાય',
   '⚙ સેટિંગ્સના બધા વિભાગ બંધ — નામ દબાવો એટલે ખૂલે',
   '📎 ચેટમાં ફોટો, કેમેરા, ફાઇલ (8 MB સુધી) અને કોન્ટેક્ટ નંબર મોકલો',
