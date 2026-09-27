@@ -412,6 +412,42 @@ html[data-theme="dark"] .tk3{color:#53bdeb}
   display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0891b2,#0e7490);box-shadow:0 8px 22px rgba(8,145,178,.45)}
 .fab-map:active{transform:scale(.94)}
 .full-open .fab-map{display:none}
+
+/* ---------- entry photo ---------- */
+.ph-row{display:flex;align-items:center;gap:12px}
+.ph-prev{width:64px;height:64px;border-radius:50%;background:var(--soft);display:flex;align-items:center;justify-content:center;font-size:28px;overflow:hidden;flex:none;border:2px solid var(--line)}
+.ph-prev img{width:100%;height:100%;object-fit:cover}
+.ph-btns{display:flex;flex-wrap:wrap;gap:6px}
+.p-ph{width:40px;height:40px;border-radius:50%;object-fit:cover;flex:none;border:2.5px solid #f59e0b;box-shadow:0 0 8px rgba(245,158,11,.5)}
+.p-ph.ok{border-color:#10b981;box-shadow:0 0 8px rgba(16,185,129,.5)}
+.e-ph{width:44px;height:44px;border-radius:50%;object-fit:cover;flex:none;border:2.5px solid #fff;box-shadow:0 0 0 2px rgba(var(--glow),.6),0 0 12px rgba(var(--glow),.5);cursor:pointer}
+.em-ph{width:54px;height:54px;border-radius:50%;object-fit:cover;float:right;margin:0 0 4px 8px}
+/* ---------- temporary close ---------- */
+.cl-btn,.cl-open{flex:none;border:none;border-radius:20px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+.cl-btn{background:var(--soft);color:var(--muted)}
+.cl-open{background:linear-gradient(135deg,#7c3aed,#a78bfa);color:#fff}
+.cl-tag{display:inline-block;font-size:11px;font-weight:800;padding:1px 8px;border-radius:20px;background:linear-gradient(135deg,#6b7280,#9ca3af);color:#fff;vertical-align:2px;margin-left:4px}
+.p-wrap.closed .p-row{background:repeating-linear-gradient(135deg,rgba(124,58,237,.07) 0 10px,rgba(124,58,237,.13) 10px 20px);cursor:not-allowed}
+.p-wrap.closed .p-n b{color:#6d28d9}
+html[data-theme="dark"] .p-wrap.closed .p-n b{color:#c4b5fd}
+.p-wrap.closed .p-chev{opacity:.25}
+.p-wrap.closed .p-dot,.p-wrap.closed .p-ph{filter:grayscale(1);opacity:.6}
+.c-cl{background:linear-gradient(135deg,#6b7280,#9ca3af);color:#fff}
+.act-btn.cls{background:var(--soft)}
+.em-pin.cl{background:linear-gradient(135deg,#6b7280,#a1a1aa)}
+/* ---------- glow borders on all boxes ---------- */
+:root{--glow:59,130,246}
+.st-grp,.set-sec,.empty,.search input,.req-row,.inst-banner{box-shadow:0 0 0 1.5px rgba(var(--glow),.45),0 0 16px -2px rgba(var(--glow),.55)!important;border-color:transparent!important}
+.entry{box-shadow:0 0 0 1.5px rgba(245,158,11,.55),0 0 16px -2px rgba(245,158,11,.55)!important;border-color:transparent!important}
+.entry.done{box-shadow:0 0 0 1.5px rgba(16,185,129,.55),0 0 16px -2px rgba(16,185,129,.55)!important}
+.p-full .entry{margin-top:4px}
+.stat{box-shadow:0 0 0 2px rgba(255,255,255,.35),0 0 20px -2px rgba(var(--glow),.75)}
+.stat.ok{box-shadow:0 0 0 2px rgba(255,255,255,.35),0 0 20px -2px rgba(16,185,129,.8)}
+.stat.pend{box-shadow:0 0 0 2px rgba(255,255,255,.35),0 0 20px -2px rgba(245,158,11,.8)}
+.stat.active{box-shadow:0 0 0 3px var(--bg),0 0 0 5px rgba(var(--glow),.9),0 0 26px rgba(var(--glow),.7)}
+.st-grp{margin-bottom:14px}
+.modal .set-sec{margin-left:2px;margin-right:2px}
+.entry .e-act{gap:4px}.entry .act-btn{width:32px;height:32px;font-size:14px}
 </style>
 </head>
 <body>
@@ -589,6 +625,18 @@ html[data-theme="dark"] .tk3{color:#53bdeb}
       <div class="hint">📍 GPS દબાવવાથી તમારું હાલનું લોકેશન આપમેળે આવી જશે.</div>
     </div>
     <div class="field"><label>વિગત</label><textarea id="fDet" placeholder="જરૂરી વિગત લખો..."></textarea></div>
+    <div class="field"><label>વ્યક્તિનો ફોટો</label>
+      <div class="ph-row">
+        <div class="ph-prev" id="fPhPrev">👤</div>
+        <div class="ph-btns">
+          <button class="btn btn-light sm" type="button" id="fPhCamBtn">📷 ફોટો પાડો</button>
+          <button class="btn btn-light sm" type="button" id="fPhGalBtn">🖼 ગેલેરી</button>
+          <button class="btn btn-danger sm hidden" type="button" id="fPhDel">✖ કાઢો</button>
+        </div>
+      </div>
+      <input type="file" id="fPhCam" accept="image/*" capture="user" class="hidden">
+      <input type="file" id="fPhGal" accept="image/*" class="hidden">
+    </div>
     <label class="chk"><input type="checkbox" id="fDone"> ✔ ટીક માર્ક (કામ પૂર્ણ)</label>
     <div class="err" id="fErr" style="margin-top:10px"></div>
     <div class="m-foot">
@@ -707,6 +755,13 @@ html[data-theme="dark"] .tk3{color:#53bdeb}
         <button class="btn btn-light sm hidden" id="resetCfgBtn">⚙ Firebase સેટિંગ બદલો</button>
       </div>
       <div class="hint">આ ફાઇલમાં તમારું Firebase સેટિંગ અંદર જ હશે. આ જ ફાઇલ કર્મચારીઓને આપો અથવા વેબસાઇટ પર મૂકો, એટલે તેમને સેટઅપ નહીં કરવું પડે.</div>
+    </div>
+
+    <div class="set-sec admin-only">
+      <h4>↺ ટીક માર્ક હટાવો (અનટીક)</h4>
+      <button class="btn btn-pri btn-block" id="untickAllBtn">↺ બધી એન્ટ્રી અત્યારે અનટીક કરો</button>
+      <label class="chk" style="margin-top:12px"><input type="checkbox" id="autoUntick"> દર મહિનાની 1 તારીખે બધી એન્ટ્રી આપોઆપ અનટીક થાય</label>
+      <div class="hint" id="untickInfo"></div>
     </div>
 
     <div class="set-sec admin-only">
@@ -1011,7 +1066,7 @@ function handleUserDoc(u,data){
   auth.signOut();return false;
 }
 
-function stopAll(){stopSocial();[unsubEntries,unsubUsers,unsubMe].forEach(f=>f&&f());unsubEntries=unsubUsers=unsubMe=null;entries=[];users=[];lastReqCount=-1}
+function stopAll(){untickChecked=false;stopSocial();[unsubEntries,unsubUsers,unsubMe].forEach(f=>f&&f());unsubEntries=unsubUsers=unsubMe=null;entries=[];users=[];lastReqCount=-1}
 
 /* ---------- auth screens ---------- */
 function showAuth(which){
@@ -1123,6 +1178,7 @@ function showApp(){
   unsubEntries=col().orderBy('createdAt','desc').onSnapshot({includeMetadataChanges:true},snap=>{
     entries=snap.docs.map(d=>({id:d.id,...d.data({serverTimestamps:'estimate'}),_pending:d.metadata.hasPendingWrites}));
     render();if(emapOpen())renderEmap();
+    if(!snap.metadata.fromCache)maybeMonthlyUntick();
   },err=>toast(errMsg(err)));
   if(isAdmin())listenUsers();
   startSocial();
@@ -1161,12 +1217,14 @@ function card(x){
   return `<div class="entry ${x.done?'done':''}">
     <div class="e-top">
       <button class="tick" data-tick="${x.id}" title="ટીક માર્ક"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><path d="M5 12l5 5L20 7"/></svg></button>
+      ${x.photo?`<img class="e-ph" src="data:image/jpeg;base64,${x.photo}" data-eph="${x.id}" alt="">`:''}
       <div style="flex:1;min-width:0">
         <div class="e-name">${esc(x.name)}</div>
         <span class="badge ${x.done?'b-ok':'b-pend'}">${x.done?'✔ પૂર્ણ'+(x.doneBy?' · '+esc(x.doneBy):''):'⏳ બાકી'}</span>${x._pending?'<span class="badge b-sync">☁ સિંક બાકી</span>':''}
       </div>
       <div class="e-act">
         <button class="act-btn" data-edit="${x.id}" title="સુધારો">✏️</button>
+        <button class="act-btn cls" data-close-e="${x.id}" title="ટેમ્પરરી ક્લોઝ">⏸</button>
         ${isAdmin()?`<button class="act-btn del" data-del="${x.id}" title="ડિલીટ">🗑</button>`:''}
       </div>
     </div>
@@ -1189,21 +1247,22 @@ function renderGroups(arr,autoOpen){
   const keys=[...g.keys()].sort((a,b)=>a==='—'?1:b==='—'?-1:ABC.compare(a,b));
   $('grpTools').classList.toggle('hidden',keys.length<2);
   $('list').innerHTML=keys.map(k=>{
-    const items=g.get(k),dn=items.filter(x=>x.done).length,open=autoOpen||openSt.has(k);
+    const items=g.get(k),dn=items.filter(x=>x.done).length,cl=items.filter(x=>x.closed).length,open=autoOpen||openSt.has(k);
     return `<div class="st-grp ${open?'open':''}" data-st="${esc(k)}">
       <div class="st-head" data-sthead>
         <div class="st-ic">${IC.ps.replace('width="16" height="16"','width="22" height="22"')}</div>
         <div class="st-t"><b>${k==='—'?'પોલીસ સ્ટેશન લખેલ નથી':esc(k)}</b>
-          <div class="st-c"><span class="c-all">${items.length} નામ</span>${dn?`<span class="c-ok">✔ ${dn}</span>`:''}${items.length-dn?`<span class="c-pd">⏳ ${items.length-dn}</span>`:''}</div></div>
+          <div class="st-c"><span class="c-all">${items.length} નામ</span>${dn?`<span class="c-ok">✔ ${dn}</span>`:''}${items.length-dn?`<span class="c-pd">⏳ ${items.length-dn}</span>`:''}${cl?`<span class="c-cl">🔒 ${cl}</span>`:''}</div></div>
         <div class="chev"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></div>
       </div>
-      <div class="st-body">${items.map(x=>`<div class="p-wrap ${openP.has(x.id)?'open':''}" data-pid="${x.id}">
+      <div class="st-body">${items.map(x=>`<div class="p-wrap ${openP.has(x.id)&&!x.closed?'open':''} ${x.closed?'closed':''}" data-pid="${x.id}">
           <div class="p-row ${x.done?'done':''}" data-prow>
-            <span class="p-dot ${x.done?'ok':''}"></span>
-            <div class="p-n"><b>${esc(x.name)}</b><small>${x.mobile?'📱 '+esc(x.mobile)+' · ':''}${x.done?'✔ પૂર્ણ':'⏳ બાકી'}</small></div>
+            ${x.photo?`<img class="p-ph ${x.done?'ok':''}" src="data:image/jpeg;base64,${x.photo}" alt="">`:`<span class="p-dot ${x.done?'ok':''}"></span>`}
+            <div class="p-n"><b>${esc(x.name)}${x.closed?' <span class="cl-tag">🔒 ટેમ્પરરી ક્લોઝ</span>':''}</b><small>${x.closed?'ક્લોઝ: '+esc(x.closedBy||'')+(x.closedAt?' · '+fmt(x.closedAt):''):(x.mobile?'📱 '+esc(x.mobile)+' · ':'')+(x.done?'✔ પૂર્ણ':'⏳ બાકી')}</small></div>
+            ${x.closed?`<button class="cl-open" data-reopen="${x.id}">🔓 ખોલો</button>`:`<button class="cl-btn" data-close-e="${x.id}" title="ટેમ્પરરી ક્લોઝ">⏸ ક્લોઝ</button>`}
             <svg class="p-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 6l6 6-6 6"/></svg>
           </div>
-          <div class="p-full">${card(x)}</div></div>`).join('')}</div>
+          ${x.closed?'':`<div class="p-full">${card(x)}</div>`}</div>`).join('')}</div>
     </div>`}).join('');
 }
 $('grpOpenAll').onclick=()=>{document.querySelectorAll('.st-grp').forEach(g=>{g.classList.add('open');openSt.add(g.dataset.st)});lsSet('pea_open_st',[...openSt])};
@@ -1212,7 +1271,21 @@ $('grpCloseAll').onclick=()=>{document.querySelectorAll('.st-grp').forEach(g=>g.
 $('list').addEventListener('click',e=>{
   const h=e.target.closest('[data-sthead]');
   if(h){const g=h.parentElement,k=g.dataset.st;g.classList.toggle('open');g.classList.contains('open')?openSt.add(k):openSt.delete(k);lsSet('pea_open_st',[...openSt]);return}
+  const ce=e.target.closest('[data-close-e]');
+  if(ce){const x=entries.find(v=>v.id===ce.dataset.closeE);if(!x)return;
+    if(!confirm(`"${x.name}" ની એન્ટ્રી ટેમ્પરરી ક્લોઝ કરવી છે?\n(વિગત નહીં ખૂલે, ફરી 🔓 ખોલો દબાવી ચાલુ કરી શકાશે)`))return;
+    openP.delete(x.id);
+    col().doc(x.id).update({closed:true,closedBy:me.name,closedAt:ts(),updatedAt:ts(),updatedBy:me.name}).catch(err=>toast(errMsg(err)));
+    toast('🔒 ટેમ્પરરી ક્લોઝ કર્યું');return}
+  const ro=e.target.closest('[data-reopen]');
+  if(ro){const x=entries.find(v=>v.id===ro.dataset.reopen);if(!x)return;
+    if(!confirm(`"${x.name}" ની એન્ટ્રી ફરી ખોલવી છે?`))return;
+    col().doc(x.id).update({closed:false,closedBy:null,closedAt:null,updatedAt:ts(),updatedBy:me.name}).catch(err=>toast(errMsg(err)));
+    toast('🔓 એન્ટ્રી ફરી ખોલી');return}
+  const eph=e.target.closest('[data-eph]');
+  if(eph){showEntryPhoto(eph.dataset.eph);return}
   const r=e.target.closest('[data-prow]');
+  if(r&&r.parentElement.classList.contains('closed')){toast('🔒 આ એન્ટ્રી ટેમ્પરરી ક્લોઝ છે. જોવા માટે "🔓 ખોલો" દબાવો');return}
   if(r){const w=r.parentElement,id=w.dataset.pid;w.classList.toggle('open');w.classList.contains('open')?openP.add(id):openP.delete(id);return}
   const t=e.target.closest('[data-tick],[data-edit],[data-del],[data-wa]');if(!t)return;
   if(t.dataset.wa)return openWa(t.dataset.wa);
@@ -1224,7 +1297,7 @@ $('list').addEventListener('click',e=>{
   }
   if(t.dataset.del){
     const x=entries.find(v=>v.id===t.dataset.del);if(!x)return;
-    if(confirm(`"${x.name}" ની એન્ટ્રી ડિલીટ કરવી છે? (બધા માટે ડિલીટ થશે)`)){col().doc(x.id).delete().catch(err=>toast(errMsg(err)));toast('એન્ટ્રી ડિલીટ થઇ')}
+    if(confirm(`"${x.name}" ની એન્ટ્રી ડિલીટ કરવી છે? (બધા માટે ડિલીટ થશે)`)){col().doc(x.id).delete().catch(err=>toast(errMsg(err)));db.collection('entryPhotos').doc(x.id).delete().catch(()=>{});toast('એન્ટ્રી ડિલીટ થઇ')}
   }
 });
 document.querySelectorAll('.stat').forEach(s=>s.onclick=()=>{filter=s.dataset.f;render()});
@@ -1235,7 +1308,37 @@ function openEntry(id){
   $('mTitle').textContent=id?'એન્ટ્રીમાં સુધારો':'નવી એન્ટ્રી';
   $('fName').value=x.name||'';$('fMobile').value=x.mobile||'';$('fStation').value=x.station||'';
   $('fLoc').value=x.location||'';$('fDet').value=x.details||'';$('fDone').checked=!!x.done;$('fErr').textContent='';
+  formPhoto=null;paintFormPhoto(x.photo||null);
   openM('entryModal');setTimeout(()=>$('fName').focus(),100);
+}
+let formPhoto=null; // null = unchanged, 'remove', or {thumb,full}
+function paintFormPhoto(thumb){
+  $('fPhPrev').innerHTML=thumb?`<img src="data:image/jpeg;base64,${thumb}" alt="">`:'👤';
+  $('fPhDel').classList.toggle('hidden',!thumb);
+}
+async function pickEntryPhoto(f){
+  if(!f)return;let url;
+  try{
+    url=URL.createObjectURL(f);
+    const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=url});
+    const shot=(max,q)=>{let w=img.naturalWidth,h=img.naturalHeight;const k=Math.min(1,max/Math.max(w,h));w=Math.round(w*k);h=Math.round(h*k);
+      const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,w,h);x.drawImage(img,0,0,w,h);
+      return c.toDataURL('image/jpeg',q).split(',')[1]};
+    let q=.8,full=shot(1000,q);while(full.length>850000&&q>.35){q-=.1;full=shot(800,q)}
+    formPhoto={thumb:shot(160,.7),full};paintFormPhoto(formPhoto.thumb);
+  }catch(e){toast('આ ફોટો ખૂલ્યો નહીં. બીજો ફોટો પસંદ કરો')}
+  finally{if(url)URL.revokeObjectURL(url)}
+}
+$('fPhCamBtn').onclick=()=>$('fPhCam').click();
+$('fPhGalBtn').onclick=()=>$('fPhGal').click();
+$('fPhCam').onchange=e=>{pickEntryPhoto(e.target.files[0]);e.target.value=''};
+$('fPhGal').onchange=e=>{pickEntryPhoto(e.target.files[0]);e.target.value=''};
+$('fPhDel').onclick=()=>{formPhoto='remove';paintFormPhoto(null)};
+async function showEntryPhoto(id){
+  const x=entries.find(v=>v.id===id);if(!x||!x.photo)return;
+  $('pvImg').src='data:image/jpeg;base64,'+x.photo;$('pvDl').classList.add('hidden');$('photoView').classList.remove('hidden');
+  try{const s=await db.collection('entryPhotos').doc(id).get();
+    if(s.exists&&s.data().d){const src='data:image/jpeg;base64,'+s.data().d;$('pvImg').src=src;$('pvDl').href=src;$('pvDl').download=(x.name||'photo')+'.jpg';$('pvDl').classList.remove('hidden')}}catch(e){}
 }
 $('addBtn').onclick=()=>openEntry();$('addBtn2').onclick=()=>openEntry();
 
@@ -1245,15 +1348,24 @@ $('saveBtn').onclick=()=>{
   if(!d.name)return $('fErr').textContent='નામ લખવું જરૂરી છે';
   d.mobile=d.mobile.replace(/[ \t]+/g,' ');
   const meta={updatedAt:ts(),updatedBy:me.name};
+  if(formPhoto==='remove')d.photo=null;else if(formPhoto)d.photo=formPhoto.thumb;
+  let ref;
   if(editId){
+    ref=col().doc(editId);
     const old=entries.find(v=>v.id===editId)||{};
     if(d.done!==!!old.done){meta.doneBy=d.done?me.name:null;meta.doneAt=d.done?ts():null}
-    col().doc(editId).update({...d,...meta}).catch(err=>toast(errMsg(err)));
+    ref.update({...d,...meta}).catch(err=>toast(errMsg(err)));
     toast('સુધારો સેવ થયો ✔');
   }else{
-    col().add({...d,...meta,wa:null,doneBy:d.done?me.name:null,createdAt:ts(),createdBy:me.name,createdByUid:me.uid}).catch(err=>toast(errMsg(err)));
+    ref=col().doc();
+    ref.set({...d,...meta,wa:null,doneBy:d.done?me.name:null,createdAt:ts(),createdBy:me.name,createdByUid:me.uid}).catch(err=>toast(errMsg(err)));
     toast('એન્ટ્રી ઉમેરાઈ ✔');
   }
+  // full-size photo is kept separately so the list stays fast
+  const ph=db.collection('entryPhotos').doc(ref.id);
+  if(formPhoto==='remove')ph.delete().catch(()=>{});
+  else if(formPhoto)ph.set({d:formPhoto.full,by:me.name,at:ts()}).catch(err=>toast('ફોટો સેવ ન થયો: '+errMsg(err)));
+  formPhoto=null;
   closeM('entryModal');
 };
 
@@ -1322,7 +1434,7 @@ $('waCopy').onclick=()=>{const x=entries.find(v=>v.id===waId);if(x)copyText(waNu
 $('setBtn').onclick=()=>{
   ['cpOld','cpNew','cpNew2','euName','euEmail','euPass'].forEach(i=>$(i).value='');
   $('cpErr').textContent='';$('euErr').textContent='';$('myName').value=me.name||'';
-  paintMe();renderUsers();
+  paintMe();renderUsers();if(isAdmin())paintUntick();
   document.querySelectorAll('#setModal .set-sec.open').forEach(x=>x.classList.remove('open')); // always start minimized
   openM('setModal');
 };
@@ -1503,12 +1615,51 @@ $('oldImpBtn').onclick=async()=>{
   try{const n=await importEntries(old);lsSet(K_OLD_DONE,true);paintMe();toast(n+' જૂની એન્ટ્રી ઉમેરાઈ ✔');closeM('setModal')}catch(err){toast(errMsg(err))}
   loading(false);
 };
+/* ---------- untick all / monthly auto untick ----------
+   Setting kept in appmeta/untick {auto, lastMonth}. The first person who opens the app
+   in a new month does the untick for everyone. */
+const monthKey=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')};
+const untickRef=()=>db.collection('appmeta').doc('untick');
+async function untickAll(by){
+  const list=entries.filter(x=>x.done);if(!list.length)return 0;
+  for(let i=0;i<list.length;i+=400){const b=db.batch();
+    list.slice(i,i+400).forEach(x=>b.update(col().doc(x.id),{done:false,doneBy:null,doneAt:null,updatedAt:ts(),updatedBy:by}));await b.commit()}
+  return list.length;
+}
+let untickChecked=false;
+async function maybeMonthlyUntick(){
+  if(untickChecked||!me||!navigator.onLine)return;untickChecked=true;
+  let d={};try{const s=await untickRef().get();d=s.exists?s.data():{}}catch(e){untickChecked=false;return}
+  const mk=monthKey();
+  if(!d.lastMonth){untickRef().set({auto:d.auto!==false,lastMonth:mk},{merge:true}).catch(()=>{});return}
+  if(d.auto===false||d.lastMonth===mk)return;
+  await untickRef().set({lastMonth:mk,lastAt:ts(),lastBy:'આપોઆપ (1 તારીખ)'},{merge:true}).catch(()=>{});
+  try{const n=await untickAll('આપોઆપ (મહિનાની 1 તારીખ)');if(n)toast('↺ નવો મહિનો: '+n+' એન્ટ્રી આપોઆપ અનટીક થઈ')}catch(e){}
+}
+async function paintUntick(){
+  try{const s=await untickRef().get(),d=s.exists?s.data():{};
+    $('autoUntick').checked=d.auto!==false;
+    $('untickInfo').textContent=d.lastAt?('છેલ્લે અનટીક: '+fmt(d.lastAt)+(d.lastBy?' · '+d.lastBy:'')):'હજુ સુધી અનટીક કર્યું નથી';
+  }catch(e){}
+}
+$('autoUntick').onchange=e=>{
+  const on=e.target.checked;
+  untickRef().set({auto:on,lastMonth:monthKey()},{merge:true}).then(()=>toast(on?'✔ દર મહિનાની 1 તારીખે આપોઆપ અનટીક થશે':'આપોઆપ અનટીક બંધ')).catch(err=>toast(errMsg(err)));
+};
+$('untickAllBtn').onclick=async()=>{
+  const n=entries.filter(x=>x.done).length;if(!n)return toast('કોઈ એન્ટ્રી ટીક થયેલ નથી');
+  if(!confirm(n+' ટીક થયેલ એન્ટ્રીનાં ટીક હટાવવાં છે? (એન્ટ્રી ડિલીટ નહીં થાય)'))return;
+  loading(true);
+  try{await untickAll(me.name);await untickRef().set({lastAt:ts(),lastBy:me.name},{merge:true});toast('↺ '+n+' એન્ટ્રી અનટીક થઈ ✔');paintUntick()}
+  catch(err){toast(errMsg(err))}
+  loading(false);
+};
 $('clearDoneBtn').onclick=async()=>{
   const list=entries.filter(x=>x.done);if(!list.length)return toast('ટીક થયેલ એન્ટ્રી નથી');
   if(!confirm(list.length+' ટીક થયેલ એન્ટ્રી બધા માટે કાયમ ડિલીટ થશે. આગળ વધવું છે?'))return;
   loading(true);
   try{
-    for(let i=0;i<list.length;i+=400){const b=db.batch();list.slice(i,i+400).forEach(x=>b.delete(col().doc(x.id)));await b.commit()}
+    for(let i=0;i<list.length;i+=400){const b=db.batch();list.slice(i,i+400).forEach(x=>{b.delete(col().doc(x.id));if(x.photo)b.delete(db.collection('entryPhotos').doc(x.id))});await b.commit()}
     toast('ડિલીટ થઇ');
   }catch(err){toast(errMsg(err))}
   loading(false);
@@ -1963,8 +2114,10 @@ function renderEmChips(){
 $('emChips').addEventListener('click',e=>{const b=e.target.closest('[data-emf]');if(!b)return;emFilter=b.dataset.emf;emFitted=false;renderEmChips();renderEmap();
   b.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'})});
 function emPopup(x,ll){
+  if(x.closed)return `<div class="em-pop"><b>${esc(x.name)}</b><div class="cl-tag" style="display:inline-block;margin-top:4px">🔒 ટેમ્પરરી ક્લોઝ</div><div class="hint">વિગત બંધ છે</div></div>`;
   return `<div class="em-pop"><b>${esc(x.name)}</b>
     <span class="badge ${x.done?'b-ok':'b-pend'}">${x.done?'✔ પૂર્ણ':'⏳ બાકી'}</span>
+    ${x.photo?`<img class="em-ph" src="data:image/jpeg;base64,${x.photo}" alt="">`:''}
     ${x.station?`<div>🏢 ${esc(x.station)}</div>`:''}${x.mobile?`<div>📱 ${esc(x.mobile)}</div>`:''}
     <div>📍 ${esc(x.location)}${ll.exact?'':' <small>(અંદાજિત)</small>'}</div>
     ${x.details?`<div class="em-det">${esc(x.details)}</div>`:''}
@@ -1992,7 +2145,7 @@ function renderEmap(){
     pts.push([ll.lat,ll.lng]);
     if(!emLayer)return;
     const icon=L.divIcon({className:'',iconSize:[30,40],iconAnchor:[15,38],popupAnchor:[0,-34],
-      html:`<div class="em-pin ${x.done?'ok':''} ${ll.exact?'':'approx'}"><span>${esc(firstLetter(x.name))}</span></div>`});
+      html:`<div class="em-pin ${x.done?'ok':''} ${x.closed?'cl':''} ${ll.exact?'':'approx'}"><span>${esc(firstLetter(x.name))}</span></div>`});
     L.marker([ll.lat,ll.lng],{icon}).bindTooltip(esc(x.name),{direction:'top',offset:[0,-36]}).bindPopup(emPopup(x,ll),{maxWidth:260}).addTo(emLayer);
   });
   if(emLayer){emap.addLayer(emLayer);
@@ -2032,9 +2185,13 @@ window.addEventListener('popstate',()=>{
 });
 
 /* ================= VERSION ================= */
-const APP_VERSION='1.3.5';
+const APP_VERSION='1.4.0';
 const APP_DATE='26/09/2026';
 const APP_NEWS=[
+  '↺ બધી એન્ટ્રી અનટીક કરો + દર મહિનાની 1 તારીખે આપોઆપ અનટીક',
+  '📷 દરેક એન્ટ્રીમાં વ્યક્તિનો ફોટો, નામની બાજુમાં',
+  '🔒 ટેમ્પરરી ક્લોઝ — ક્લોઝ કરેલી એન્ટ્રીની વિગત નહીં ખૂલે',
+  '✨ બધાં બોક્ષને ગ્લો બોર્ડર',
   '🔤 નકશાની પિનમાં વ્યક્તિના નામનો પહેલો અક્ષર',
   '🗺 નકશાનું ગોળ બટન હવે નીચે ＋ ની ઉપર',
   '🛰 નકશામાં સેટેલાઇટ વ્યૂ — નકશો / સેટેલાઇટ / નામ સાથે',
@@ -2107,6 +2264,7 @@ function applyTheme(t){
   if(!THEMES.some(x=>x[0]===t))t='blue';
   document.documentElement.dataset.theme=t;lsSet('pea_theme',t);
   const th=THEMES.find(x=>x[0]===t);
+  const hx=(t==='dark'?'#3b82f6':th[3]).replace('#','');document.documentElement.style.setProperty('--glow',[0,2,4].map(i=>parseInt(hx.substr(i,2),16)).join(','));
   document.querySelector('meta[name="theme-color"]').setAttribute('content',t==='dark'?'#020617':th[2]);
   $('themeGrid').innerHTML=THEMES.map(([id,name,c1,c2])=>`<button class="th ${id===t?'on':''}" data-th="${id}"><i style="background:linear-gradient(135deg,${c1},${c2})"></i>${name}</button>`).join('');
 }
