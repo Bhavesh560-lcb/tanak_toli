@@ -448,6 +448,35 @@ html[data-theme="dark"] .p-wrap.closed .p-n b{color:#c4b5fd}
 .st-grp{margin-bottom:14px}
 .modal .set-sec{margin-left:2px;margin-right:2px}
 .entry .e-act{gap:4px}.entry .act-btn{width:32px;height:32px;font-size:14px}
+
+/* ---------- crop ---------- */
+#cropView{position:fixed;inset:0;z-index:170;background:#0b0f19;display:flex;flex-direction:column;align-items:center;color:#fff}
+.cr-head{width:100%;display:flex;align-items:center;justify-content:space-between;padding:12px;gap:8px}
+.cr-head b{font-size:16px}
+.cr-head button{background:rgba(255,255,255,.14);color:#fff;border:none;border-radius:10px;padding:9px 14px;font-weight:700;font-size:14px;cursor:pointer}
+.cr-head .cr-ok{background:#22c55e}
+.cr-stage{position:relative;width:92vw;height:62vh;margin:auto 0;overflow:hidden;touch-action:none;user-select:none}
+.cr-stage img{position:absolute;max-width:none;pointer-events:none;-webkit-user-drag:none}
+.cr-box{position:absolute;box-shadow:0 0 0 9999px rgba(0,0,0,.6);outline:2px solid #fff;cursor:move;touch-action:none}
+.cr-grid{position:absolute;inset:0;pointer-events:none;background:
+  linear-gradient(to right,transparent 33.2%,rgba(255,255,255,.35) 33.3%,rgba(255,255,255,.35) 33.6%,transparent 33.7%,transparent 66.4%,rgba(255,255,255,.35) 66.5%,rgba(255,255,255,.35) 66.8%,transparent 66.9%),
+  linear-gradient(to bottom,transparent 33.2%,rgba(255,255,255,.35) 33.3%,rgba(255,255,255,.35) 33.6%,transparent 33.7%,transparent 66.4%,rgba(255,255,255,.35) 66.5%,rgba(255,255,255,.35) 66.8%,transparent 66.9%)}
+.cr-circle{position:absolute;border-radius:50%;border:2px dashed #fde047;pointer-events:none;box-shadow:0 0 0 1px rgba(0,0,0,.4)}
+.cr-box .h{position:absolute;background:#fff;border-radius:4px;box-shadow:0 0 0 1px rgba(0,0,0,.35)}
+.cr-box .h::after{content:"";position:absolute;inset:-14px}
+.cr-box .n,.cr-box .s{left:50%;width:34px;height:6px;margin-left:-17px;cursor:ns-resize}
+.cr-box .n{top:-4px}.cr-box .s{bottom:-4px}
+.cr-box .w,.cr-box .e{top:50%;width:6px;height:34px;margin-top:-17px;cursor:ew-resize}
+.cr-box .w{left:-4px}.cr-box .e{right:-4px}
+.cr-box .nw,.cr-box .ne,.cr-box .sw,.cr-box .se{width:18px;height:18px;background:transparent;box-shadow:none;border:4px solid #fff}
+.cr-box .nw{left:-5px;top:-5px;border-right:none;border-bottom:none;cursor:nwse-resize}
+.cr-box .ne{right:-5px;top:-5px;border-left:none;border-bottom:none;cursor:nesw-resize}
+.cr-box .sw{left:-5px;bottom:-5px;border-right:none;border-top:none;cursor:nesw-resize}
+.cr-box .se{right:-5px;bottom:-5px;border-left:none;border-top:none;cursor:nwse-resize}
+.cr-tools{width:min(94vw,480px);padding:12px 4px 22px}
+.cr-btns{display:flex;gap:8px}
+.cr-btns button{flex:1;background:rgba(255,255,255,.12);color:#fff;border:none;border-radius:10px;padding:10px 4px;font-weight:700;font-size:13px;cursor:pointer}
+.cr-hint{text-align:center;font-size:12px;opacity:.75;margin-top:10px;line-height:1.6}
 </style>
 </head>
 <body>
@@ -845,6 +874,29 @@ html[data-theme="dark"] .p-wrap.closed .p-n b{color:#c4b5fd}
   <div class="em-wrap"><div id="emap"></div>
     <div class="em-layers" id="emLayers"><button data-ml="map">🗺 નકશો</button><button data-ml="sat">🛰 સેટેલાઇટ</button><button data-ml="hyb">🏙 નામ સાથે</button></div><button class="em-me" id="emMe" title="હું ક્યાં છું">📍 હું અહીં છું</button></div>
   <div class="em-info" id="emInfo"></div>
+</div>
+
+<!-- Photo crop -->
+<div id="cropView" class="hidden">
+  <div class="cr-head"><button id="crCancel">✕ રદ</button><b>✂ ફોટો ક્રોપ કરો</b><button id="crOk" class="cr-ok">✔ બરાબર</button></div>
+  <div class="cr-stage" id="crStage">
+    <img id="crImg" alt="">
+    <div class="cr-box" id="crBox">
+      <div class="cr-grid"></div>
+      <div class="cr-circle" id="crCircle"></div>
+      <i class="h n" data-h="n"></i><i class="h s" data-h="s"></i><i class="h w" data-h="w"></i><i class="h e" data-h="e"></i>
+      <i class="h nw" data-h="nw"></i><i class="h ne" data-h="ne"></i><i class="h sw" data-h="sw"></i><i class="h se" data-h="se"></i>
+    </div>
+  </div>
+  <div class="cr-tools">
+    <div class="cr-btns">
+      <button id="crRot">↻ ફેરવો</button>
+      <button id="crSq">■ ચોરસ</button>
+      <button id="crReset">⟲ ફરી</button>
+      <button id="crFull">▣ આખો ફોટો</button>
+    </div>
+    <div class="cr-hint">બોક્ષની લાઇન કે ખૂણા ખેંચીને માપ બદલો · બોક્ષની અંદરથી ખેંચીને ખસેડો<br>ગોળ ભાગ નામની બાજુમાં ફોટો તરીકે દેખાશે</div>
+  </div>
 </div>
 
 <div id="iosHelp" class="hidden">
@@ -1311,6 +1363,63 @@ function openEntry(id){
   formPhoto=null;paintFormPhoto(x.photo||null);
   openM('entryModal');setTimeout(()=>$('fName').focus(),100);
 }
+
+/* ---------- photo crop (square, like a profile photo) ---------- */
+let crState=null;
+function openCrop(img0){
+  return new Promise(resolve=>{
+    const v=$('cropView'),stage=$('crStage'),im=$('crImg'),box=$('crBox'),circ=$('crCircle');
+    v.classList.remove('hidden');document.body.classList.add('cropping');applyZoom();
+    let src=img0;              // current (possibly rotated) picture: canvas or image
+    const W=()=>src.naturalWidth||src.width,H=()=>src.naturalHeight||src.height;
+    let L={},B={};             // L = where the picture sits on screen, B = crop box (screen px)
+    const MIN=40;
+    function layout(){
+      const sw=stage.clientWidth,sh=stage.clientHeight,k=Math.min(sw/W(),sh/H());
+      L={x:(sw-W()*k)/2,y:(sh-H()*k)/2,w:W()*k,h:H()*k,k};
+      im.style.left=L.x+'px';im.style.top=L.y+'px';im.style.width=L.w+'px';im.style.height=L.h+'px';
+    }
+    function setSrc(c){src=c;im.src=c.toDataURL?c.toDataURL('image/jpeg',.92):c.src;layout()}
+    function defBox(){const d=Math.min(L.w,L.h)*.8;B={x:L.x+(L.w-d)/2,y:L.y+(L.h-d)/2,w:d,h:d}}
+    function paint(){
+      B.w=Math.max(MIN,Math.min(B.w,L.w));B.h=Math.max(MIN,Math.min(B.h,L.h));
+      B.x=Math.max(L.x,Math.min(B.x,L.x+L.w-B.w));B.y=Math.max(L.y,Math.min(B.y,L.y+L.h-B.h));
+      Object.assign(box.style,{left:B.x+'px',top:B.y+'px',width:B.w+'px',height:B.h+'px'});
+      const d=Math.min(B.w,B.h);Object.assign(circ.style,{width:d+'px',height:d+'px',left:(B.w-d)/2-2+'px',top:(B.h-d)/2-2+'px'});
+    }
+    setSrc(img0);defBox();paint();
+    // drag lines / corners / whole box
+    let drag=null;
+    box.onpointerdown=e=>{e.preventDefault();box.setPointerCapture(e.pointerId);
+      drag={h:e.target.dataset.h||'move',x:e.clientX,y:e.clientY,b:{...B}}};
+    box.onpointermove=e=>{if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y,o=drag.b,h=drag.h;
+      if(h==='move'){B.x=o.x+dx;B.y=o.y+dy;B.w=o.w;B.h=o.h;return paint()}
+      let x1=o.x,y1=o.y,x2=o.x+o.w,y2=o.y+o.h;
+      if(h.includes('w'))x1=Math.min(Math.max(L.x,o.x+dx),x2-MIN);
+      if(h.includes('e'))x2=Math.max(Math.min(L.x+L.w,x2+dx),x1+MIN);
+      if(h.includes('n'))y1=Math.min(Math.max(L.y,o.y+dy),y2-MIN);
+      if(h.includes('s'))y2=Math.max(Math.min(L.y+L.h,y2+dy),y1+MIN);
+      B={x:x1,y:y1,w:x2-x1,h:y2-y1};paint()};
+    box.onpointerup=box.onpointercancel=()=>{drag=null};
+    $('crRot').onclick=()=>{const c=document.createElement('canvas');c.width=H();c.height=W();const x=c.getContext('2d');
+      x.translate(c.width/2,c.height/2);x.rotate(Math.PI/2);x.drawImage(src,-W()/2,-H()/2);setSrc(c);defBox();paint()};
+    $('crSq').onclick=()=>{const d=Math.min(B.w,B.h),cx=B.x+B.w/2,cy=B.y+B.h/2;B={x:cx-d/2,y:cy-d/2,w:d,h:d};paint()};
+    $('crReset').onclick=()=>{setSrc(img0);defBox();paint()};
+    $('crFull').onclick=()=>{B={x:L.x,y:L.y,w:L.w,h:L.h};paint()};
+    const onResize=()=>{const r={x:(B.x-L.x)/L.w,y:(B.y-L.y)/L.h,w:B.w/L.w,h:B.h/L.h};layout();B={x:L.x+r.x*L.w,y:L.y+r.y*L.h,w:r.w*L.w,h:r.h*L.h};paint()};
+    window.addEventListener('resize',onResize);
+    const done=r=>{v.classList.add('hidden');document.body.classList.remove('cropping');applyZoom();window.removeEventListener('resize',onResize);
+      box.onpointerdown=box.onpointermove=null;resolve(r)};
+    $('crCancel').onclick=()=>done(null);
+    $('crOk').onclick=()=>{
+      // box in picture pixels
+      const sx=(B.x-L.x)/L.k,sy=(B.y-L.y)/L.k,sw=B.w/L.k,sh=B.h/L.k,pic=src;
+      done(max=>{const k=Math.min(1,max/Math.max(sw,sh)),w=Math.max(1,Math.round(sw*k)),h=Math.max(1,Math.round(sh*k));
+        const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,w,h);
+        x.drawImage(pic,sx,sy,sw,sh,0,0,w,h);return c});
+    };
+  });
+}
 let formPhoto=null; // null = unchanged, 'remove', or {thumb,full}
 function paintFormPhoto(thumb){
   $('fPhPrev').innerHTML=thumb?`<img src="data:image/jpeg;base64,${thumb}" alt="">`:'👤';
@@ -1321,9 +1430,9 @@ async function pickEntryPhoto(f){
   try{
     url=URL.createObjectURL(f);
     const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=url});
-    const shot=(max,q)=>{let w=img.naturalWidth,h=img.naturalHeight;const k=Math.min(1,max/Math.max(w,h));w=Math.round(w*k);h=Math.round(h*k);
-      const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,w,h);x.drawImage(img,0,0,w,h);
-      return c.toDataURL('image/jpeg',q).split(',')[1]};
+    const crop=await openCrop(img);
+    if(!crop)return; // cancelled
+    const shot=(max,q)=>crop(max).toDataURL('image/jpeg',q).split(',')[1];
     let q=.8,full=shot(1000,q);while(full.length>850000&&q>.35){q-=.1;full=shot(800,q)}
     formPhoto={thumb:shot(160,.7),full};paintFormPhoto(formPhoto.thumb);
   }catch(e){toast('આ ફોટો ખૂલ્યો નહીં. બીજો ફોટો પસંદ કરો')}
@@ -2185,9 +2294,10 @@ window.addEventListener('popstate',()=>{
 });
 
 /* ================= VERSION ================= */
-const APP_VERSION='1.4.0';
+const APP_VERSION='1.4.2';
 const APP_DATE='26/09/2026';
 const APP_NEWS=[
+  '✂ ફોટો ક્રોપ બોક્ષ — લાઇન અને ખૂણા ખેંચીને ક્રોપ, ગોળ ભાગ નામની બાજુમાં',
   '↺ બધી એન્ટ્રી અનટીક કરો + દર મહિનાની 1 તારીખે આપોઆપ અનટીક',
   '📷 દરેક એન્ટ્રીમાં વ્યક્તિનો ફોટો, નામની બાજુમાં',
   '🔒 ટેમ્પરરી ક્લોઝ — ક્લોઝ કરેલી એન્ટ્રીની વિગત નહીં ખૂલે',
@@ -2278,12 +2388,12 @@ const K_ZOOM='pea_zoom2',Z_MIN=70,Z_MAX=170;
 let zoom=lsGet(K_ZOOM,100);
 function applyZoom(){
   zoom=Math.max(Z_MIN,Math.min(Z_MAX,Math.round(zoom)));
-  document.documentElement.style.zoom=(typeof emapOpen==='function'&&emapOpen())?'':zoom/100;
+  document.documentElement.style.zoom=((typeof emapOpen==='function'&&emapOpen())||document.body.classList.contains('cropping'))?'':zoom/100;
 }
 (function(){
   let startD=0,startZ=100,raf=0,pinching=false;
   const dist=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);
-  const skip=()=>typeof emapOpen==='function'&&emapOpen();
+  const skip=()=>(typeof emapOpen==='function'&&emapOpen())||document.body.classList.contains('cropping');
   document.addEventListener('touchstart',e=>{
     if(e.touches.length===2&&!skip()){pinching=true;startD=dist(e.touches);startZ=zoom}
   },{passive:true});
