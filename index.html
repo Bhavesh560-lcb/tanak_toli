@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="theme-color" content="#1d4ed8">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" href="favicon.png">
@@ -482,6 +483,8 @@ html[data-theme="dark"] .p-wrap.closed .p-n b{color:#c4b5fd}
 .p-ph,.e-ph,.em-ph{cursor:zoom-in}
 .ph-prev{cursor:pointer}
 #photoView{z-index:175}
+.em-pin.ph{width:42px;height:42px;padding:2px;border-width:3px}
+.em-pin.ph img{width:100%;height:100%;border-radius:50%;object-fit:cover;transform:rotate(45deg);display:block}
 </style>
 </head>
 <body>
@@ -2252,7 +2255,14 @@ function setMapLayer(k){
   if(!emap||!window.L)return;
   if(!baseLayers){
     const E='https://server.arcgisonline.com/ArcGIS/rest/services/',EA='Tiles © Esri — Esri, Maxar, Earthstar Geographics';
-    const osm=()=>L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'});
+    // Normal map: Esri street map (OpenStreetMap's own servers block apps — "Access blocked" 403).
+    // If Esri tiles fail, switch automatically to CARTO.
+    const osm=()=>{
+      const esri=L.tileLayer(E+'World_Street_Map/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,maxNativeZoom:19,attribution:'Tiles © Esri — HERE, Garmin, OpenStreetMap contributors'});
+      let bad=0;esri.on('tileerror',()=>{if(++bad===6&&emap&&emap.hasLayer(esri)){
+        const carto=L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{maxZoom:19,subdomains:'abcd',attribution:'© OpenStreetMap contributors © CARTO'});
+        emap.removeLayer(esri);carto.addTo(emap);baseLayers.map=[carto];if(curLayer[0]===esri)curLayer=[carto];}});
+      return esri;};
     const sat=()=>L.tileLayer(E+'World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,maxNativeZoom:18,attribution:EA});
     const lbl=()=>L.tileLayer(E+'Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,maxNativeZoom:18,pane:'overlayPane'});
     const rds=()=>L.tileLayer(E+'Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,maxNativeZoom:18,pane:'overlayPane',opacity:.8});
@@ -2308,9 +2318,14 @@ function renderEmap(){
     if(!ll){(x.location&&!(x.geo&&x.geo.q===x.location)?pendingGeo:noLoc).push(x);return}
     pts.push([ll.lat,ll.lng]);
     if(!emLayer)return;
-    const icon=L.divIcon({className:'',iconSize:[30,40],iconAnchor:[15,38],popupAnchor:[0,-34],
-      html:`<div class="em-pin ${x.done?'ok':''} ${x.closed?'cl':''} ${ll.exact?'':'approx'}"><span>${esc(firstLetter(x.name))}</span></div>`});
-    L.marker([ll.lat,ll.lng],{icon}).bindTooltip(esc(x.name),{direction:'top',offset:[0,-36]}).bindPopup(emPopup(x,ll),{maxWidth:260}).addTo(emLayer);
+    // photo in the pin when the entry has one (not for temporarily closed), otherwise the first letter
+    const withPh=!!(x.photo&&!x.closed);
+    const icon=withPh
+      ?L.divIcon({className:'',iconSize:[42,54],iconAnchor:[21,52],popupAnchor:[0,-46],
+        html:`<div class="em-pin ph ${x.done?'ok':''} ${ll.exact?'':'approx'}"><img src="data:image/jpeg;base64,${x.photo}" alt=""></div>`})
+      :L.divIcon({className:'',iconSize:[30,40],iconAnchor:[15,38],popupAnchor:[0,-34],
+        html:`<div class="em-pin ${x.done?'ok':''} ${x.closed?'cl':''} ${ll.exact?'':'approx'}"><span>${esc(firstLetter(x.name))}</span></div>`});
+    L.marker([ll.lat,ll.lng],{icon}).bindTooltip(esc(x.name),{direction:'top',offset:[0,withPh?-48:-36]}).bindPopup(emPopup(x,ll),{maxWidth:260}).addTo(emLayer);
   });
   if(emLayer){emap.addLayer(emLayer);
     if(!emFitted&&pts.length){emFitted=true;pts.length===1?emap.setView(pts[0],15):emap.fitBounds(pts,{padding:[40,40],maxZoom:16})}}
@@ -2350,9 +2365,11 @@ window.addEventListener('popstate',()=>{
 });
 
 /* ================= VERSION ================= */
-const APP_VERSION='1.4.4';
+const APP_VERSION='1.4.6';
 const APP_DATE='26/09/2026';
 const APP_NEWS=[
+  '📷 નકશાની પિનમાં વ્યક્તિનો ફોટો (ફોટો ન હોય તો નામનો પહેલો અક્ષર)',
+  '🗺 નકશાની "Access blocked" ભૂલ સુધારી — સાદો નકશો હવે Esri માંથી',
   '◀ ફોનનું Back બટન: એન્ટ્રી સુધારો, સેટિંગ્સ, ક્રોપ વગેરે બંધ કરે, એપની બહાર ન જાય',
   '🖼 ફોટો ફરી એડિટ / ક્રોપ થાય, અને નામની બાજુનો ફોટો દબાવતાં મોટો ખૂલે',
   '✂ ફોટો ક્રોપ બોક્ષ — લાઇન અને ખૂણા ખેંચીને ક્રોપ, ગોળ ભાગ નામની બાજુમાં',
