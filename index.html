@@ -17,7 +17,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script>try{document.documentElement.dataset.theme=JSON.parse(localStorage.getItem('pea_theme'))||'blue'}catch(e){document.documentElement.dataset.theme='blue'}</script>
+<script>try{var t=JSON.parse(localStorage.getItem('pea_theme'))||'blue';if(t==='auto')t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'blue';document.documentElement.dataset.theme=t}catch(e){document.documentElement.dataset.theme='blue'}</script>
 <style>
 :root,html[data-theme="blue"]{
   --bg:#f1f4f9; --card:#ffffff; --ink:#15213b; --muted:#65718a; --line:#e2e7f0; --line2:#f0f2f7;
@@ -485,6 +485,42 @@ html[data-theme="dark"] .p-wrap.closed .p-n b{color:#c4b5fd}
 #photoView{z-index:175}
 .em-pin.ph{width:42px;height:42px;padding:2px;border-width:3px}
 .em-pin.ph img{width:100%;height:100%;border-radius:50%;object-fit:cover;transform:rotate(45deg);display:block}
+
+/* ---------- motion ---------- */
+@keyframes stInL{0%{transform:translateX(-115%) rotate(-4deg);opacity:0}65%{transform:translateX(5%) rotate(1deg);opacity:1}82%{transform:translateX(-2%)}100%{transform:none;opacity:1}}
+@keyframes stInR{0%{transform:translateX(115%) rotate(4deg);opacity:0}65%{transform:translateX(-5%) rotate(-1deg);opacity:1}82%{transform:translateX(2%)}100%{transform:none;opacity:1}}
+.st-grp.fly{animation:stInL .75s cubic-bezier(.2,.8,.25,1) both;animation-delay:var(--d,0s)}
+.st-grp.fly.r{animation-name:stInR}
+/* loading placeholders */
+@keyframes skShine{0%{background-position:-300px 0}100%{background-position:300px 0}}
+.sk{display:flex;align-items:center;gap:12px;padding:16px;margin-bottom:14px;border-radius:18px;background:var(--card);box-shadow:0 0 0 1.5px rgba(var(--glow),.25)}
+.sk i,.sk b{display:block;border-radius:10px;background:linear-gradient(90deg,var(--soft) 0,var(--soft3) 40%,var(--soft) 80%);background-size:600px 100%;animation:skShine 1.2s linear infinite}
+.sk i{width:44px;height:44px;border-radius:13px;flex:none}
+.sk div{flex:1}.sk b{height:14px;width:55%;margin:4px 0}.sk b+b{width:32%;height:10px}
+/* undo bar */
+#undoBar{position:fixed;left:50%;bottom:92px;transform:translate(-50%,30px);opacity:0;pointer-events:none;z-index:260;display:flex;align-items:center;gap:14px;
+  background:#15213b;color:#fff;border-radius:14px;padding:10px 10px 10px 16px;box-shadow:0 10px 30px rgba(0,0,0,.3);transition:.25s;max-width:92vw;font-size:14px}
+#undoBar span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#undoBar button{flex:none;background:#fde047;color:#422006;border:none;border-radius:10px;padding:8px 12px;font-weight:800;cursor:pointer}
+#undoBar.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+@media (prefers-reduced-motion: reduce){.st-grp.fly,.sk i,.sk b{animation:none!important}}
+
+/* ---------- greeting ---------- */
+.greet{display:grid;grid-template-columns:1fr auto;grid-template-areas:"l r" "t r";align-items:center;gap:2px 12px;margin-bottom:14px;padding:12px 14px;border-radius:18px;
+  background:linear-gradient(135deg,var(--tint),var(--card) 75%);box-shadow:0 0 0 1.5px rgba(var(--glow),.45),0 0 16px -2px rgba(var(--glow),.5)}
+.greet:empty{display:none}
+.g-l{grid-area:l;min-width:0}.g-l b{display:block;font-size:17px;color:var(--ink)}.g-l small{color:var(--muted);font-size:12.5px}
+.g-t{grid-area:t;font-size:13px;color:var(--ink2)}.g-t b{color:#ea580c;font-size:15px}
+.g-r{grid-area:r;position:relative;width:46px;height:46px}
+.g-r span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:800;color:#059669}
+/* ---------- search highlight ---------- */
+mark{background:linear-gradient(135deg,#fde047,#facc15);color:#1f2937;border-radius:4px;padding:0 2px}
+/* ---------- press feedback on every button / card ---------- */
+button,.btn,.p-row,.st-head,.stat,.c-row,.mob-btn,.maplink{transition:transform .12s ease,box-shadow .2s ease,background .2s}
+button:active,.btn:active,.p-row:active,.st-head:active,.stat:active,.c-row:active{transform:scale(.97)}
+.fab:active,.fab-chat:active,.fab-map:active{transform:scale(.92)}
+@media (prefers-reduced-motion: reduce){button:active,.btn:active,.p-row:active,.st-head:active,.stat:active,.c-row:active{transform:none}}
+.th i{background-size:cover}
 </style>
 </head>
 <body>
@@ -613,6 +649,7 @@ html[data-theme="dark"] .p-wrap.closed .p-n b{color:#c4b5fd}
   <main>
     <div class="inst-banner hidden"></div>
     <button class="req-banner hidden" id="reqBanner"></button>
+    <div class="greet" id="greet"></div>
     <div class="stats">
       <div class="stat active" data-f="all" data-ic="📋"><div class="n" id="stAll">0</div><div class="l">કુલ એન્ટ્રી</div></div>
       <div class="stat ok" data-f="done" data-ic="✔"><div class="n" id="stDone">0</div><div class="l">✔ ટીક થયેલ</div></div>
@@ -987,6 +1024,16 @@ function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 function lsDel(k){try{localStorage.removeItem(k)}catch(e){}}
 const norm=s=>(s||'').toString().trim().toLowerCase();
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+/* small vibration on actions (phones that support it) */
+function buzz(ms){try{navigator.vibrate&&navigator.vibrate(ms||12)}catch(e){}}
+/* message with an "undo" button at the bottom, 5 seconds */
+function undoBar(msg,undo){
+  let u=$('undoBar');if(!u){u=document.createElement('div');u.id='undoBar';document.body.appendChild(u)}
+  u.innerHTML=`<span>${esc(msg)}</span><button>↶ પાછું</button>`;
+  u.classList.add('show');clearTimeout(u._t);
+  u.querySelector('button').onclick=()=>{u.classList.remove('show');clearTimeout(u._t);buzz(8);try{undo()}catch(e){}};
+  u._t=setTimeout(()=>u.classList.remove('show'),5000);
+}
 function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2600)}
 function fmt(v){const n=ms(v);if(!n)return '';const d=new Date(n);return d.toLocaleDateString('en-GB')+' '+d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}
 function ms(v){if(!v)return 0;if(typeof v==='number')return v;if(typeof v.toMillis==='function')return v.toMillis();if(typeof v.seconds==='number')return v.seconds*1000;return 0}
@@ -1140,7 +1187,7 @@ function handleUserDoc(u,data){
   auth.signOut();return false;
 }
 
-function stopAll(){untickChecked=false;stopSocial();[unsubEntries,unsubUsers,unsubMe].forEach(f=>f&&f());unsubEntries=unsubUsers=unsubMe=null;entries=[];users=[];lastReqCount=-1}
+function stopAll(){flyStart=0;untickChecked=false;stopSocial();[unsubEntries,unsubUsers,unsubMe].forEach(f=>f&&f());unsubEntries=unsubUsers=unsubMe=null;entries=[];users=[];lastReqCount=-1}
 
 /* ---------- auth screens ---------- */
 function showAuth(which){
@@ -1249,6 +1296,7 @@ function showApp(){
   loading(false);hideScreens();$('appScreen').classList.remove('hidden');
   paintMe();paintNet();
   if(unsubEntries)unsubEntries();
+  if(!entries.length){$('list').innerHTML=Array.from({length:4},(_,i)=>`<div class="sk" style="animation-delay:${i*.12}s"><i></i><div><b></b><b></b></div></div>`).join('');$('empty').classList.add('hidden')}
   unsubEntries=col().orderBy('createdAt','desc').onSnapshot({includeMetadataChanges:true},snap=>{
     entries=snap.docs.map(d=>({id:d.id,...d.data({serverTimestamps:'estimate'}),_pending:d.metadata.hasPendingWrites}));
     render();if(emapOpen())renderEmap();
@@ -1264,7 +1312,7 @@ function paintNet(){
 window.addEventListener('online',paintNet);window.addEventListener('offline',paintNet);
 
 function render(){
-  const q=norm($('q').value);
+  const q=norm($('q').value);curQ=q;paintGreet();
   const done=entries.filter(x=>x.done).length;
   $('stAll').textContent=entries.length;$('stDone').textContent=done;$('stPend').textContent=entries.length-done;
   document.querySelectorAll('.stat').forEach(s=>s.classList.toggle('active',s.dataset.f===filter));
@@ -1313,16 +1361,44 @@ function card(x){
 }
 
 const ABC=new Intl.Collator(['gu','en'],{numeric:true,sensitivity:'base'});
+/* greeting line: good morning + date + how much work is pending */
+let curQ='';
+function paintGreet(){
+  const el=$('greet');if(!el||!me)return;
+  const d=new Date(),h=d.getHours();
+  const hi=h<5?['🌙','શુભ રાત્રિ']:h<12?['🌅','સુપ્રભાત']:h<17?['☀️','શુભ બપોર']:h<21?['🌇','શુભ સાંજ']:['🌙','શુભ રાત્રિ'];
+  const days=['રવિવાર','સોમવાર','મંગળવાર','બુધવાર','ગુરુવાર','શુક્રવાર','શનિવાર'];
+  const mons=['જાન્યુઆરી','ફેબ્રુઆરી','માર્ચ','એપ્રિલ','મે','જૂન','જુલાઈ','ઓગસ્ટ','સપ્ટેમ્બર','ઓક્ટોબર','નવેમ્બર','ડિસેમ્બર'];
+  const pend=entries.filter(x=>!x.done&&!x.closed).length,tot=entries.length,pct=tot?Math.round((tot-entries.filter(x=>!x.done).length)*100/tot):0;
+  el.innerHTML=`<div class="g-l"><b>${hi[0]} ${hi[1]}, ${esc((me.name||'').split(' ')[0])}</b><small>${days[d.getDay()]}, ${d.getDate()} ${mons[d.getMonth()]}</small></div>
+    <div class="g-r" title="કામ પૂરું"><svg viewBox="0 0 36 36" width="46" height="46"><circle cx="18" cy="18" r="15.5" fill="none" stroke="rgba(var(--glow),.18)" stroke-width="4"/>
+    <circle cx="18" cy="18" r="15.5" fill="none" stroke="url(#gG)" stroke-width="4" stroke-linecap="round" stroke-dasharray="${(pct*97.4/100).toFixed(1)} 97.4" transform="rotate(-90 18 18)"/>
+    <defs><linearGradient id="gG"><stop offset="0" stop-color="#10b981"/><stop offset="1" stop-color="#34d399"/></linearGradient></defs></svg><span>${pct}%</span></div>
+    <div class="g-t">${pend?`⏳ આજે <b>${pend}</b> કામ બાકી`:'🎉 બધું કામ પૂરું!'}</div>`;
+}
+setInterval(()=>{if(me)paintGreet()},60000);
+/* highlight the searched text inside names */
+function hl(t){
+  t=String(t||'');const q=curQ;if(!q)return esc(t);
+  const i=t.toLowerCase().indexOf(q);if(i<0)return esc(t);
+  return esc(t.slice(0,i))+'<mark>'+esc(t.slice(i,i+q.length))+'</mark>'+esc(t.slice(i+q.length));
+}
 const openSt=new Set(lsGet('pea_open_st',[])),openP=new Set();
 const stKey=x=>(x.station||'').trim()||'—';
+/* A: after the app opens, station boxes fly in one by one, alternately from left and right.
+   Re-renders during the first 2.5 s continue the same animation instead of restarting it. */
+let flyStart=0;
+function flyOn(){if(!flyStart)return 0;const t=(Date.now()-flyStart)/1000;return t<2.5?t:0}
 function renderGroups(arr,autoOpen){
+  if(!flyStart&&arr.length)flyStart=Date.now();
   const g=new Map();
   arr.forEach(x=>{const k=stKey(x);if(!g.has(k))g.set(k,[]);g.get(k).push(x)});
   const keys=[...g.keys()].sort((a,b)=>a==='—'?1:b==='—'?-1:ABC.compare(a,b));
   $('grpTools').classList.toggle('hidden',keys.length<2);
-  $('list').innerHTML=keys.map(k=>{
+  $('list').innerHTML=keys.map((k,ki)=>{
     const items=g.get(k),dn=items.filter(x=>x.done).length,cl=items.filter(x=>x.closed).length,open=autoOpen||openSt.has(k);
-    return `<div class="st-grp ${open?'open':''}" data-st="${esc(k)}">
+    const fl=flyOn();
+    return `<div class="st-grp ${open?'open':''} ${fl?'fly'+(ki%2?' r':''):''}" data-st="${esc(k)}"${fl?` style="--d:${(ki*.16-fl).toFixed(2)}s"`:''}>
       <div class="st-head" data-sthead>
         <div class="st-ic">${IC.ps.replace('width="16" height="16"','width="22" height="22"')}</div>
         <div class="st-t"><b>${k==='—'?'પોલીસ સ્ટેશન લખેલ નથી':esc(k)}</b>
@@ -1332,7 +1408,7 @@ function renderGroups(arr,autoOpen){
       <div class="st-body">${items.map(x=>`<div class="p-wrap ${openP.has(x.id)&&!x.closed?'open':''} ${x.closed?'closed':''}" data-pid="${x.id}">
           <div class="p-row ${x.done?'done':''}" data-prow>
             ${x.photo?`<img class="p-ph ${x.done?'ok':''}" src="data:image/jpeg;base64,${x.photo}" data-eph="${x.id}" alt="" title="ફોટો જુઓ">`:`<span class="p-dot ${x.done?'ok':''}"></span>`}
-            <div class="p-n"><b>${esc(x.name)}${x.closed?' <span class="cl-tag">🔒 ટેમ્પરરી ક્લોઝ</span>':''}</b><small>${x.closed?'ક્લોઝ: '+esc(x.closedBy||'')+(x.closedAt?' · '+fmt(x.closedAt):''):(x.mobile?'📱 '+esc(x.mobile)+' · ':'')+(x.done?'✔ પૂર્ણ':'⏳ બાકી')}</small></div>
+            <div class="p-n"><b>${hl(x.name)}${x.closed?' <span class="cl-tag">🔒 ટેમ્પરરી ક્લોઝ</span>':''}</b><small>${x.closed?'ક્લોઝ: '+esc(x.closedBy||'')+(x.closedAt?' · '+fmt(x.closedAt):''):(x.mobile?'📱 '+esc(x.mobile)+' · ':'')+(x.done?'✔ પૂર્ણ':'⏳ બાકી')}</small></div>
             ${x.closed?`<button class="cl-open" data-reopen="${x.id}">🔓 ખોલો</button>`:`<button class="cl-btn" data-close-e="${x.id}" title="ટેમ્પરરી ક્લોઝ">⏸ ક્લોઝ</button>`}
             <svg class="p-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 6l6 6-6 6"/></svg>
           </div>
@@ -1344,13 +1420,15 @@ $('grpCloseAll').onclick=()=>{document.querySelectorAll('.st-grp').forEach(g=>g.
   document.querySelectorAll('.p-wrap.open').forEach(w=>w.classList.remove('open'));lsSet('pea_open_st',[])};
 $('list').addEventListener('click',e=>{
   const h=e.target.closest('[data-sthead]');
-  if(h){const g=h.parentElement,k=g.dataset.st;g.classList.toggle('open');g.classList.contains('open')?openSt.add(k):openSt.delete(k);lsSet('pea_open_st',[...openSt]);return}
+  if(h){const g=h.parentElement,k=g.dataset.st;g.classList.toggle('open');g.classList.contains('open')?openSt.add(k):openSt.delete(k);lsSet('pea_open_st',[...openSt]);
+    if(g.classList.contains('open'))buzz(8);
+    return}
   const ce=e.target.closest('[data-close-e]');
   if(ce){const x=entries.find(v=>v.id===ce.dataset.closeE);if(!x)return;
     if(!confirm(`"${x.name}" ની એન્ટ્રી ટેમ્પરરી ક્લોઝ કરવી છે?\n(વિગત નહીં ખૂલે, ફરી 🔓 ખોલો દબાવી ચાલુ કરી શકાશે)`))return;
     openP.delete(x.id);
     col().doc(x.id).update({closed:true,closedBy:me.name,closedAt:ts(),updatedAt:ts(),updatedBy:me.name}).catch(err=>toast(errMsg(err)));
-    toast('🔒 ટેમ્પરરી ક્લોઝ કર્યું');return}
+    buzz(15);undoBar('🔒 ટેમ્પરરી ક્લોઝ: '+x.name,()=>col().doc(x.id).update({closed:false,closedBy:null,closedAt:null,updatedAt:ts(),updatedBy:me.name}));return}
   const ro=e.target.closest('[data-reopen]');
   if(ro){const x=entries.find(v=>v.id===ro.dataset.reopen);if(!x)return;
     if(!confirm(`"${x.name}" ની એન્ટ્રી ફરી ખોલવી છે?`))return;
@@ -1366,12 +1444,19 @@ $('list').addEventListener('click',e=>{
   if(t.dataset.edit)return openEntry(t.dataset.edit);
   if(t.dataset.tick){
     const x=entries.find(v=>v.id===t.dataset.tick);if(!x)return;const nd=!x.done;
+    const prev={done:!!x.done,doneBy:x.doneBy||null,doneAt:x.doneAt||null};
     col().doc(x.id).update({done:nd,doneBy:nd?me.name:null,doneAt:nd?ts():null,updatedAt:ts(),updatedBy:me.name}).catch(err=>toast(errMsg(err)));
-    toast(nd?'✔ ટીક માર્ક થયું':'ટીક માર્ક હટાવ્યું');
+    buzz(nd?[12,40,12]:12);
+    undoBar((nd?'✔ ટીક માર્ક થયું: ':'ટીક હટાવ્યું: ')+x.name,()=>col().doc(x.id).update({...prev,updatedAt:ts(),updatedBy:me.name}).catch(err=>toast(errMsg(err))));
   }
   if(t.dataset.del){
     const x=entries.find(v=>v.id===t.dataset.del);if(!x)return;
-    if(confirm(`"${x.name}" ની એન્ટ્રી ડિલીટ કરવી છે? (બધા માટે ડિલીટ થશે)`)){col().doc(x.id).delete().catch(err=>toast(errMsg(err)));db.collection('entryPhotos').doc(x.id).delete().catch(()=>{});db.collection('entryPhotoOrig').doc(x.id).delete().catch(()=>{});toast('એન્ટ્રી ડિલીટ થઇ')}
+    if(confirm(`"${x.name}" ની એન્ટ્રી ડિલીટ કરવી છે? (બધા માટે ડિલીટ થશે)`)){
+      const keep={...x};delete keep.id;delete keep._pending;
+      col().doc(x.id).delete().catch(err=>toast(errMsg(err)));buzz(20);
+      let undone=false;const phT=setTimeout(()=>{if(!undone&&x.photo)db.collection('entryPhotos').doc(x.id).delete().catch(()=>{})},6500);
+      undoBar('🗑 ડિલીટ થઈ: '+x.name,()=>{undone=true;clearTimeout(phT);col().doc(x.id).set(keep).then(()=>toast('↶ એન્ટ્રી પાછી આવી ✔')).catch(err=>toast(errMsg(err)))});
+    }
   }
 });
 document.querySelectorAll('.stat').forEach(s=>s.onclick=()=>{filter=s.dataset.f;render()});
@@ -2365,9 +2450,16 @@ window.addEventListener('popstate',()=>{
 });
 
 /* ================= VERSION ================= */
-const APP_VERSION='1.4.6';
+const APP_VERSION='1.5.1';
 const APP_DATE='26/09/2026';
 const APP_NEWS=[
+  '👋 ઉપર શુભેચ્છા, આજની તારીખ અને કામ કેટલું પૂરું થયું તેનું ગોળ ચિહ્ન',
+  '🔎 શોધેલા અક્ષર નામમાં પીળા રંગથી દેખાય',
+  '🌓 ઓટો થીમ — ફોન ડાર્ક મોડમાં હોય તો એપ પણ ડાર્ક',
+  '👆 દરેક બટન દબાવતાં હળવું દબાતું દેખાય',
+  '✨ એપ ખોલતાં પોલીસ સ્ટેશન બોક્ષ ડાબે-જમણેથી વારાફરતી આવે',
+  '↶ ટીક, ક્લોઝ અને ડિલીટ પછી 5 સેકન્ડમાં "પાછું" કરી શકાય',
+  '⏳ લોડ થતી વખતે ચમકતાં ખાલી બોક્ષ, 📳 ટીક વખતે હળવું વાઇબ્રેશન',
   '📷 નકશાની પિનમાં વ્યક્તિનો ફોટો (ફોટો ન હોય તો નામનો પહેલો અક્ષર)',
   '🗺 નકશાની "Access blocked" ભૂલ સુધારી — સાદો નકશો હવે Esri માંથી',
   '◀ ફોનનું Back બટન: એન્ટ્રી સુધારો, સેટિંગ્સ, ક્રોપ વગેરે બંધ કરે, એપની બહાર ન જાય',
@@ -2443,18 +2535,21 @@ $('updBtn').onclick=async()=>{
 const THEMES=[
   ['blue','નીલ','#1d4ed8','#3b82f6'],['green','હરિયાળી','#047857','#10b981'],['saffron','કેસરી','#ea580c','#f59e0b'],
   ['purple','જાંબલી','#7c3aed','#a78bfa'],['khaki','ખાખી','#6b5f22','#a8964a'],['red','લાલ','#be123c','#fb7185'],
-  ['teal','દરિયાઈ','#0e7490','#22d3ee'],['dark','ડાર્ક','#020617','#1e3a8a']
+  ['teal','દરિયાઈ','#0e7490','#22d3ee'],['dark','ડાર્ક','#020617','#1e3a8a'],['auto','ઓટો 🌓','#f1f5f9','#020617']
 ];
 function applyTheme(t){
   if(!THEMES.some(x=>x[0]===t))t='blue';
-  document.documentElement.dataset.theme=t;lsSet('pea_theme',t);
+  const pick=t;lsSet('pea_theme',pick);
+  if(t==='auto')t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'blue';
+  document.documentElement.dataset.theme=t;
   const th=THEMES.find(x=>x[0]===t);
   const hx=(t==='dark'?'#3b82f6':th[3]).replace('#','');document.documentElement.style.setProperty('--glow',[0,2,4].map(i=>parseInt(hx.substr(i,2),16)).join(','));
   document.querySelector('meta[name="theme-color"]').setAttribute('content',t==='dark'?'#020617':th[2]);
-  $('themeGrid').innerHTML=THEMES.map(([id,name,c1,c2])=>`<button class="th ${id===t?'on':''}" data-th="${id}"><i style="background:linear-gradient(135deg,${c1},${c2})"></i>${name}</button>`).join('');
+  $('themeGrid').innerHTML=THEMES.map(([id,name,c1,c2])=>`<button class="th ${id===pick?'on':''}" data-th="${id}"><i style="background:linear-gradient(135deg,${c1},${c2})"></i>${name}</button>`).join('');
 }
 $('themeGrid').addEventListener('click',e=>{const b=e.target.closest('[data-th]');if(b){applyTheme(b.dataset.th);toast('🎨 થીમ બદલાઈ')}});
 applyTheme(lsGet('pea_theme','blue'));
+try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(lsGet('pea_theme','blue')==='auto')applyTheme('auto')})}catch(e){}
 
 /* ================= ZOOM =================
    Two-finger pinch makes text & buttons bigger/smaller, but everything
