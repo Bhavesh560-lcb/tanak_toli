@@ -477,6 +477,11 @@ html[data-theme="dark"] .p-wrap.closed .p-n b{color:#c4b5fd}
 .cr-btns{display:flex;gap:8px}
 .cr-btns button{flex:1;background:rgba(255,255,255,.12);color:#fff;border:none;border-radius:10px;padding:10px 4px;font-weight:700;font-size:13px;cursor:pointer}
 .cr-hint{text-align:center;font-size:12px;opacity:.75;margin-top:10px;line-height:1.6}
+
+.pv-cap{position:absolute;left:0;right:0;bottom:0;padding:12px 16px 18px;color:#fff;font-size:14px;text-align:center;background:linear-gradient(transparent,rgba(0,0,0,.7))}
+.p-ph,.e-ph,.em-ph{cursor:zoom-in}
+.ph-prev{cursor:pointer}
+#photoView{z-index:175}
 </style>
 </head>
 <body>
@@ -660,6 +665,7 @@ html[data-theme="dark"] .p-wrap.closed .p-n b{color:#c4b5fd}
         <div class="ph-btns">
           <button class="btn btn-light sm" type="button" id="fPhCamBtn">📷 ફોટો પાડો</button>
           <button class="btn btn-light sm" type="button" id="fPhGalBtn">🖼 ગેલેરી</button>
+          <button class="btn btn-light sm hidden" type="button" id="fPhEdit">✂ એડિટ / ક્રોપ</button>
           <button class="btn btn-danger sm hidden" type="button" id="fPhDel">✖ કાઢો</button>
         </div>
       </div>
@@ -860,6 +866,7 @@ html[data-theme="dark"] .p-wrap.closed .p-n b{color:#c4b5fd}
 <!-- Photo viewer -->
 <div id="photoView" class="hidden">
   <div class="pv-bar"><button id="pvClose">✕</button><a id="pvDl" class="hidden" download>⬇ ડાઉનલોડ</a></div>
+  <div class="pv-cap" id="pvCap"></div>
   <img id="pvImg" alt="">
 </div>
 
@@ -981,8 +988,20 @@ function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');cle
 function fmt(v){const n=ms(v);if(!n)return '';const d=new Date(n);return d.toLocaleDateString('en-GB')+' '+d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}
 function ms(v){if(!v)return 0;if(typeof v==='number')return v;if(typeof v.toMillis==='function')return v.toMillis();if(typeof v.seconds==='number')return v.seconds*1000;return 0}
 function mapUrl(loc){return 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(loc.trim())}
-function openM(id){$(id).classList.remove('hidden')}
-function closeM(id){$(id).classList.add('hidden')}
+/* Windows (entry form, settings, WhatsApp...) register with the phone's Back button:
+   Back closes the open window instead of leaving the app. */
+let _skipPop=0;
+function openM(id){const el=$(id);if(!el.classList.contains('hidden'))return;el.classList.remove('hidden');try{history.pushState({ov:id},'')}catch(e){}}
+function closeM(id){const el=$(id);if(!el||el.classList.contains('hidden'))return;el.classList.add('hidden');
+  if(history.state&&history.state.ov===id){_skipPop++;history.back()}}
+window.addEventListener('popstate',e=>{
+  if(_skipPop>0){_skipPop--;e.stopImmediatePropagation();return}       // our own history.back()
+  if(!$('cropView').classList.contains('hidden')){e.stopImmediatePropagation();$('crCancel').click();return}
+  if(!$('photoView').classList.contains('hidden'))return;              // photo viewer handles itself
+  const open=[...document.querySelectorAll('.overlay:not(.hidden),#iosHelp:not(.hidden)')];
+  if(open.length){e.stopImmediatePropagation();
+    open.sort((a,b)=>(+getComputedStyle(b).zIndex||0)-(+getComputedStyle(a).zIndex||0))[0].classList.add('hidden');}
+});
 function loading(on){$('loading').classList.toggle('hidden',!on)}
 function busyBtn(b,on){b.disabled=on}
 document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>closeM(b.dataset.close));
@@ -1309,7 +1328,7 @@ function renderGroups(arr,autoOpen){
       </div>
       <div class="st-body">${items.map(x=>`<div class="p-wrap ${openP.has(x.id)&&!x.closed?'open':''} ${x.closed?'closed':''}" data-pid="${x.id}">
           <div class="p-row ${x.done?'done':''}" data-prow>
-            ${x.photo?`<img class="p-ph ${x.done?'ok':''}" src="data:image/jpeg;base64,${x.photo}" alt="">`:`<span class="p-dot ${x.done?'ok':''}"></span>`}
+            ${x.photo?`<img class="p-ph ${x.done?'ok':''}" src="data:image/jpeg;base64,${x.photo}" data-eph="${x.id}" alt="" title="ફોટો જુઓ">`:`<span class="p-dot ${x.done?'ok':''}"></span>`}
             <div class="p-n"><b>${esc(x.name)}${x.closed?' <span class="cl-tag">🔒 ટેમ્પરરી ક્લોઝ</span>':''}</b><small>${x.closed?'ક્લોઝ: '+esc(x.closedBy||'')+(x.closedAt?' · '+fmt(x.closedAt):''):(x.mobile?'📱 '+esc(x.mobile)+' · ':'')+(x.done?'✔ પૂર્ણ':'⏳ બાકી')}</small></div>
             ${x.closed?`<button class="cl-open" data-reopen="${x.id}">🔓 ખોલો</button>`:`<button class="cl-btn" data-close-e="${x.id}" title="ટેમ્પરરી ક્લોઝ">⏸ ક્લોઝ</button>`}
             <svg class="p-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 6l6 6-6 6"/></svg>
@@ -1335,7 +1354,7 @@ $('list').addEventListener('click',e=>{
     col().doc(x.id).update({closed:false,closedBy:null,closedAt:null,updatedAt:ts(),updatedBy:me.name}).catch(err=>toast(errMsg(err)));
     toast('🔓 એન્ટ્રી ફરી ખોલી');return}
   const eph=e.target.closest('[data-eph]');
-  if(eph){showEntryPhoto(eph.dataset.eph);return}
+  if(eph){const cw=eph.closest('.p-wrap.closed');if(cw){toast('🔒 આ એન્ટ્રી ટેમ્પરરી ક્લોઝ છે');return}showEntryPhoto(eph.dataset.eph);return}
   const r=e.target.closest('[data-prow]');
   if(r&&r.parentElement.classList.contains('closed')){toast('🔒 આ એન્ટ્રી ટેમ્પરરી ક્લોઝ છે. જોવા માટે "🔓 ખોલો" દબાવો');return}
   if(r){const w=r.parentElement,id=w.dataset.pid;w.classList.toggle('open');w.classList.contains('open')?openP.add(id):openP.delete(id);return}
@@ -1349,7 +1368,7 @@ $('list').addEventListener('click',e=>{
   }
   if(t.dataset.del){
     const x=entries.find(v=>v.id===t.dataset.del);if(!x)return;
-    if(confirm(`"${x.name}" ની એન્ટ્રી ડિલીટ કરવી છે? (બધા માટે ડિલીટ થશે)`)){col().doc(x.id).delete().catch(err=>toast(errMsg(err)));db.collection('entryPhotos').doc(x.id).delete().catch(()=>{});toast('એન્ટ્રી ડિલીટ થઇ')}
+    if(confirm(`"${x.name}" ની એન્ટ્રી ડિલીટ કરવી છે? (બધા માટે ડિલીટ થશે)`)){col().doc(x.id).delete().catch(err=>toast(errMsg(err)));db.collection('entryPhotos').doc(x.id).delete().catch(()=>{});db.collection('entryPhotoOrig').doc(x.id).delete().catch(()=>{});toast('એન્ટ્રી ડિલીટ થઇ')}
   }
 });
 document.querySelectorAll('.stat').forEach(s=>s.onclick=()=>{filter=s.dataset.f;render()});
@@ -1369,7 +1388,7 @@ let crState=null;
 function openCrop(img0){
   return new Promise(resolve=>{
     const v=$('cropView'),stage=$('crStage'),im=$('crImg'),box=$('crBox'),circ=$('crCircle');
-    v.classList.remove('hidden');document.body.classList.add('cropping');applyZoom();
+    v.classList.remove('hidden');document.body.classList.add('cropping');applyZoom();try{history.pushState({ov:'cropView'},'')}catch(e){}
     let src=img0;              // current (possibly rotated) picture: canvas or image
     const W=()=>src.naturalWidth||src.width,H=()=>src.naturalHeight||src.height;
     let L={},B={};             // L = where the picture sits on screen, B = crop box (screen px)
@@ -1408,7 +1427,7 @@ function openCrop(img0){
     $('crFull').onclick=()=>{B={x:L.x,y:L.y,w:L.w,h:L.h};paint()};
     const onResize=()=>{const r={x:(B.x-L.x)/L.w,y:(B.y-L.y)/L.h,w:B.w/L.w,h:B.h/L.h};layout();B={x:L.x+r.x*L.w,y:L.y+r.y*L.h,w:r.w*L.w,h:r.h*L.h};paint()};
     window.addEventListener('resize',onResize);
-    const done=r=>{v.classList.add('hidden');document.body.classList.remove('cropping');applyZoom();window.removeEventListener('resize',onResize);
+    const done=r=>{v.classList.add('hidden');document.body.classList.remove('cropping');applyZoom();if(history.state&&history.state.ov==='cropView'){_skipPop++;history.back()}window.removeEventListener('resize',onResize);
       box.onpointerdown=box.onpointermove=null;resolve(r)};
     $('crCancel').onclick=()=>done(null);
     $('crOk').onclick=()=>{
@@ -1423,31 +1442,62 @@ function openCrop(img0){
 let formPhoto=null; // null = unchanged, 'remove', or {thumb,full}
 function paintFormPhoto(thumb){
   $('fPhPrev').innerHTML=thumb?`<img src="data:image/jpeg;base64,${thumb}" alt="">`:'👤';
-  $('fPhDel').classList.toggle('hidden',!thumb);
+  $('fPhDel').classList.toggle('hidden',!thumb);$('fPhEdit').classList.toggle('hidden',!thumb);
+}
+const loadImg64=src=>new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=src});
+function origOf(img){ // original picture, max 1600px, kept for later editing
+  const k=Math.min(1,1600/Math.max(img.naturalWidth,img.naturalHeight)),w=Math.round(img.naturalWidth*k),h=Math.round(img.naturalHeight*k);
+  const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,w,h);x.drawImage(img,0,0,w,h);
+  let q=.85,d=c.toDataURL('image/jpeg',q).split(',')[1];while(d.length>900000&&q>.35){q-=.1;d=c.toDataURL('image/jpeg',q).split(',')[1]}
+  return d;
+}
+async function cropToFormPhoto(img,orig){
+  const crop=await openCrop(img);
+  if(!crop)return false; // cancelled
+  const shot=(max,q)=>crop(max).toDataURL('image/jpeg',q).split(',')[1];
+  let q=.8,full=shot(1000,q);while(full.length>850000&&q>.35){q-=.1;full=shot(800,q)}
+  formPhoto={thumb:shot(160,.7),full,orig};paintFormPhoto(formPhoto.thumb);return true;
 }
 async function pickEntryPhoto(f){
   if(!f)return;let url;
   try{
     url=URL.createObjectURL(f);
-    const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=url});
-    const crop=await openCrop(img);
-    if(!crop)return; // cancelled
-    const shot=(max,q)=>crop(max).toDataURL('image/jpeg',q).split(',')[1];
-    let q=.8,full=shot(1000,q);while(full.length>850000&&q>.35){q-=.1;full=shot(800,q)}
-    formPhoto={thumb:shot(160,.7),full};paintFormPhoto(formPhoto.thumb);
+    const img=await loadImg64(url);
+    await cropToFormPhoto(img,origOf(img));
   }catch(e){toast('આ ફોટો ખૂલ્યો નહીં. બીજો ફોટો પસંદ કરો')}
   finally{if(url)URL.revokeObjectURL(url)}
 }
+// edit (re-crop) the photo that is already there
+async function editFormPhoto(){
+  let orig=null,full=null;
+  if(formPhoto&&formPhoto!=='remove'){orig=formPhoto.orig;full=formPhoto.full}
+  else if(editId){
+    toast('ફોટો ખૂલે છે...');
+    try{const o=await db.collection('entryPhotoOrig').doc(editId).get();if(o.exists)orig=o.data().d}catch(e){}
+    if(!orig){try{const f=await db.collection('entryPhotos').doc(editId).get();if(f.exists)full=f.data().d}catch(e){}}
+    if(!orig&&!full){const x=entries.find(v=>v.id===editId);full=x&&x.photo}
+  }
+  const b64=orig||full;if(!b64)return toast('એડિટ કરવા માટે ફોટો નથી');
+  try{const img=await loadImg64('data:image/jpeg;base64,'+b64);await cropToFormPhoto(img,orig||full)}
+  catch(e){toast('ફોટો ખૂલ્યો નહીં')}
+}
+$('fPhEdit').onclick=editFormPhoto;
+$('fPhPrev').onclick=()=>{if($('fPhPrev').querySelector('img'))editFormPhoto();else $('fPhGal').click()};
 $('fPhCamBtn').onclick=()=>$('fPhCam').click();
 $('fPhGalBtn').onclick=()=>$('fPhGal').click();
 $('fPhCam').onchange=e=>{pickEntryPhoto(e.target.files[0]);e.target.value=''};
 $('fPhGal').onchange=e=>{pickEntryPhoto(e.target.files[0]);e.target.value=''};
 $('fPhDel').onclick=()=>{formPhoto='remove';paintFormPhoto(null)};
 async function showEntryPhoto(id){
-  const x=entries.find(v=>v.id===id);if(!x||!x.photo)return;
-  $('pvImg').src='data:image/jpeg;base64,'+x.photo;$('pvDl').classList.add('hidden');$('photoView').classList.remove('hidden');
-  try{const s=await db.collection('entryPhotos').doc(id).get();
-    if(s.exists&&s.data().d){const src='data:image/jpeg;base64,'+s.data().d;$('pvImg').src=src;$('pvDl').href=src;$('pvDl').download=(x.name||'photo')+'.jpg';$('pvDl').classList.remove('hidden')}}catch(e){}
+  const x=entries.find(v=>v.id===id);if(!x||!x.photo)return toast('ફોટો નથી');
+  $('pvImg').src='data:image/jpeg;base64,'+x.photo;$('pvDl').classList.add('hidden');
+  $('pvCap').textContent=(x.name||'')+' · મોટો ફોટો ખૂલે છે...';
+  $('photoView').classList.remove('hidden');history.pushState({pv:1},'');
+  try{
+    const s=await db.collection('entryPhotos').doc(id).get();
+    if(s.exists&&s.data().d){const src='data:image/jpeg;base64,'+s.data().d;$('pvImg').src=src;$('pvDl').href=src;$('pvDl').download=(x.name||'photo')+'.jpg';$('pvDl').classList.remove('hidden');$('pvCap').textContent=x.name||''}
+    else $('pvCap').textContent=(x.name||'')+' · (મોટો ફોટો મળ્યો નહીં, નાનો ફોટો બતાવ્યો છે)';
+  }catch(e){$('pvCap').textContent=(x.name||'')+' · '+errMsg(e)}
 }
 $('addBtn').onclick=()=>openEntry();$('addBtn2').onclick=()=>openEntry();
 
@@ -1472,8 +1522,12 @@ $('saveBtn').onclick=()=>{
   }
   // full-size photo is kept separately so the list stays fast
   const ph=db.collection('entryPhotos').doc(ref.id);
-  if(formPhoto==='remove')ph.delete().catch(()=>{});
-  else if(formPhoto)ph.set({d:formPhoto.full,by:me.name,at:ts()}).catch(err=>toast('ફોટો સેવ ન થયો: '+errMsg(err)));
+  const po=db.collection('entryPhotoOrig').doc(ref.id);
+  if(formPhoto==='remove'){ph.delete().catch(()=>{});po.delete().catch(()=>{})}
+  else if(formPhoto){
+    ph.set({d:formPhoto.full,by:me.name,at:ts()}).catch(err=>toast('ફોટો સેવ ન થયો: '+errMsg(err)));
+    if(formPhoto.orig)po.set({d:formPhoto.orig,at:ts()}).catch(()=>{});
+  }
   formPhoto=null;
   closeM('entryModal');
 };
@@ -2087,7 +2141,7 @@ $('ctSend').onclick=()=>{
 $('msgs').addEventListener('click',async e=>{
   const ph=e.target.closest('[data-photo]'),fl=e.target.closest('[data-file]'),vc=e.target.closest('[data-vcf]');
   if(ph){
-    $('pvImg').src='data:image/jpeg;base64,'+ph.dataset.th;$('photoView').classList.remove('hidden');$('pvDl').classList.add('hidden');
+    $('pvCap').textContent='';$('pvImg').src='data:image/jpeg;base64,'+ph.dataset.th;$('photoView').classList.remove('hidden');$('pvDl').classList.add('hidden');
     try{const b=await getBlob(curChat,ph.dataset.photo);$('pvImg').src=b.url;$('pvDl').href=b.url;$('pvDl').download=b.meta.name||'photo.jpg';$('pvDl').classList.remove('hidden')}
     catch(err){toast('પૂરો ફોટો ખૂલ્યો નહીં')}
   }
@@ -2103,7 +2157,8 @@ $('msgs').addEventListener('click',async e=>{
     document.body.appendChild(a);a.click();a.remove();toast('ફોનમાં સેવ કરવા ખોલો');
   }
 });
-$('pvClose').onclick=()=>$('photoView').classList.add('hidden');
+$('pvClose').onclick=()=>{if(history.state&&history.state.pv)history.back();else $('photoView').classList.add('hidden')};
+$('photoView').addEventListener('click',e=>{if(e.target.id==='photoView')$('pvClose').click()});
 function attBody(x){
   if(x.type==='photo')return `<img class="m-photo" src="data:image/jpeg;base64,${x.thumb||''}" data-photo="${esc(x.bid)}" data-th="${x.thumb||''}" alt="ફોટો" style="aspect-ratio:${x.w||4}/${x.h||3}">`;
   if(x.type==='file'){
@@ -2226,7 +2281,7 @@ function emPopup(x,ll){
   if(x.closed)return `<div class="em-pop"><b>${esc(x.name)}</b><div class="cl-tag" style="display:inline-block;margin-top:4px">🔒 ટેમ્પરરી ક્લોઝ</div><div class="hint">વિગત બંધ છે</div></div>`;
   return `<div class="em-pop"><b>${esc(x.name)}</b>
     <span class="badge ${x.done?'b-ok':'b-pend'}">${x.done?'✔ પૂર્ણ':'⏳ બાકી'}</span>
-    ${x.photo?`<img class="em-ph" src="data:image/jpeg;base64,${x.photo}" alt="">`:''}
+    ${x.photo?`<img class="em-ph" src="data:image/jpeg;base64,${x.photo}" data-eph="${x.id}" alt="" title="ફોટો જુઓ">`:''}
     ${x.station?`<div>🏢 ${esc(x.station)}</div>`:''}${x.mobile?`<div>📱 ${esc(x.mobile)}</div>`:''}
     <div>📍 ${esc(x.location)}${ll.exact?'':' <small>(અંદાજિત)</small>'}</div>
     ${x.details?`<div class="em-det">${esc(x.details)}</div>`:''}
@@ -2266,7 +2321,7 @@ function renderEmap(){
     '<span class="em-leg"><i class="lg p"></i>બાકી <i class="lg o"></i>પૂર્ણ <i class="lg a"></i>અંદાજિત</span>';
   const nb=$('emNoLocBtn');if(nb)nb.onclick=()=>alert('લોકેશન વગરની / ન મળેલી એન્ટ્રી:\n\n'+noLoc.map(x=>'• '+x.name+(x.station?' ('+x.station+')':'')+(x.location?' — "'+x.location+'"':'')).join('\n')+'\n\nએન્ટ્રીમાં ✏ સુધારો → 📍 GPS દબાવી ચોક્કસ લોકેશન નાખી શકાય.');
 }
-$('emap').addEventListener('click',e=>{const b=e.target.closest('[data-emedit]');if(!b)return;const id=b.dataset.emedit;history.back();setTimeout(()=>openEntry(id),250)});
+$('emap').addEventListener('click',e=>{const ep=e.target.closest('[data-eph]');if(ep){showEntryPhoto(ep.dataset.eph);return}const b=e.target.closest('[data-emedit]');if(!b)return;const id=b.dataset.emedit;history.back();setTimeout(()=>openEntry(id),250)});
 // look up typed addresses (once per entry, max 1 per second as OpenStreetMap asks)
 async function geocodeMissing(){
   if(geoBusy||!navigator.onLine)return;geoBusy=true;
@@ -2287,6 +2342,7 @@ async function geocodeMissing(){
 }
 
 window.addEventListener('popstate',()=>{
+  if(!$('photoView').classList.contains('hidden')){$('photoView').classList.add('hidden');return}
   if(emapOpen()){$('emapScreen').classList.add('hidden');document.body.classList.remove('full-open');stopMyLoc();
     if(myMarker&&emap){emap.removeLayer(myMarker);emap.removeLayer(myCircle)}myMarker=myCircle=null;applyZoom();return}
   if(!$('chatScreen').classList.contains('hidden')&&curChat){closeConv();return}
@@ -2294,9 +2350,11 @@ window.addEventListener('popstate',()=>{
 });
 
 /* ================= VERSION ================= */
-const APP_VERSION='1.4.2';
+const APP_VERSION='1.4.4';
 const APP_DATE='26/09/2026';
 const APP_NEWS=[
+  '◀ ફોનનું Back બટન: એન્ટ્રી સુધારો, સેટિંગ્સ, ક્રોપ વગેરે બંધ કરે, એપની બહાર ન જાય',
+  '🖼 ફોટો ફરી એડિટ / ક્રોપ થાય, અને નામની બાજુનો ફોટો દબાવતાં મોટો ખૂલે',
   '✂ ફોટો ક્રોપ બોક્ષ — લાઇન અને ખૂણા ખેંચીને ક્રોપ, ગોળ ભાગ નામની બાજુમાં',
   '↺ બધી એન્ટ્રી અનટીક કરો + દર મહિનાની 1 તારીખે આપોઆપ અનટીક',
   '📷 દરેક એન્ટ્રીમાં વ્યક્તિનો ફોટો, નામની બાજુમાં',
@@ -2441,15 +2499,15 @@ function doInstall(){
     ?`<ol><li>આ પેજ <b>Safari</b> માં ખોલો (Chrome માં નહીં)</li><li>નીચે વચ્ચે <b>Share</b> બટન <b>⬆</b> દબાવો</li><li>નીચે સ્ક્રોલ કરી <b>"Add to Home Screen"</b> દબાવો</li><li>ઉપર જમણે <b>Add</b> દબાવો</li></ol>`
     :`<ol><li>આ પેજ <b>Chrome</b> માં ખોલો</li><li>ઉપર જમણે <b>⋮</b> (ત્રણ ટપકાં) દબાવો</li><li><b>"Install app"</b> અથવા <b>"Add to Home screen"</b> દબાવો</li><li><b>Install</b> દબાવો</li></ol><div class="hint">ઇન્સ્ટોલનો વિકલ્પ ન દેખાય તો ખાતરી કરો કે એપ https:// વાળી લિંકથી (GitHub) ખોલી છે, ફાઇલ તરીકે નહીં.</div>`;
   $('iosSteps').innerHTML=steps+'<div class="hint" style="margin-top:10px">પછી હોમ સ્ક્રીન પર <b>Tanak Toli</b> નો આઇકન આવી જશે.</div>';
-  $('iosHelp').classList.remove('hidden');
+  openM('iosHelp');
 }
 document.addEventListener('click',e=>{
   if(e.target.closest('[data-inst]'))doInstall();
   if(e.target.closest('[data-inst-x]')){lsSet(K_INST_HIDE,Date.now()+3*24*3600*1000);paintInstall()}
 });
 $('instBtnSet').onclick=doInstall;
-$('iosClose').onclick=()=>$('iosHelp').classList.add('hidden');
-$('iosHelp').addEventListener('click',e=>{if(e.target.id==='iosHelp')$('iosHelp').classList.add('hidden')});
+$('iosClose').onclick=()=>closeM('iosHelp');
+$('iosHelp').addEventListener('click',e=>{if(e.target.id==='iosHelp')closeM('iosHelp')});
 paintInstall();
 
 /* ================= START ================= */
